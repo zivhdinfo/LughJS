@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2023"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node"],
+    "typeRoots": ["./types", "./node_modules/@types", "../node_modules/@types"]
+  },
+  "include": ["run-bench.ts", "seed.ts", "profile.ts", "servers/**/*.ts", "project/**/*.ts", "test/**/*.ts", "fixtures/**/*.ts", "types/**/*.d.ts"]
+}

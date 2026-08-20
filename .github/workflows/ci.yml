@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  quality:
+    name: typecheck + tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck core
+        run: npm run typecheck --workspace @lughjs/core
+
+      - name: Typecheck demo app
+        run: npm run typecheck --workspace @lughjs/demo
+
+      - name: Typecheck bench
+        run: npx tsc -p bench/tsconfig.json
+
+      - name: Tests
+        run: npm test
+
+      - name: npm audit (runtime deps)
+        run: npm audit --omit=dev
+
+  # Reported, never gating: a shared CI runner is too noisy for a throughput
+  # comparison to mean anything. Read the ratio, not the absolute numbers.
+  benchmark:
+    name: benchmark (report only)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run bench
+        continue-on-error: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: benchmarks
+          path: bench/BENCHMARKS.md
