@@ -2,6 +2,33 @@
 
 The binary is `lugh`. Every command except `new` runs from a project root.
 
+## Getting at the command
+
+`lugh` is installed into your project, not onto your PATH, so typing it bare
+gives you this:
+
+```
+'lugh' is not recognized as an internal or external command
+```
+
+There are three ways to run it, and a scaffolded project is already set up for
+the first:
+
+```bash
+npm run dev              # the generated package.json wraps every command you need
+npx lugh list:routes     # anything not wrapped by a script
+npm install -g @lughjs/core   # then `lugh` works anywhere
+```
+
+The generated `package.json` maps `dev`, `start`, `migrate`, `seed` and `routes`,
+which covers ordinary work without `npx`.
+
+To create a project before any of this exists, run the package directly:
+
+```bash
+npx @lughjs/core new my-app
+```
+
 ```bash
 lugh --help
 lugh --version

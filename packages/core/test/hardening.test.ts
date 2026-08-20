@@ -84,6 +84,39 @@ test('a 500 never echoes the internal error message', async (t) => {
   delete process.env.NODE_ENV
 })
 
+test('a missing database driver explains itself instead of dumping a require stack', async (t) => {
+  // knex throws a six-frame require stack from inside its own dialect loader,
+  // and nothing in it says the project was never installed. That message was
+  // the first thing a new user hit after skipping `npm install`.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lugh-driver-'))
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }))
+
+  fs.mkdirSync(path.join(dir, 'config'), { recursive: true })
+  fs.mkdirSync(path.join(dir, 'start'), { recursive: true })
+  // No imports anywhere in this fixture: it lives in a temp directory, so
+  // nothing outside Node's builtins would resolve from there. An empty spec
+  // object is valid; loadEnv still applies its own NODE_ENV default.
+  fs.writeFileSync(path.join(dir, 'config', 'env.ts'), 'export default {}\n')
+  fs.writeFileSync(path.join(dir, 'config', 'app.ts'), "export default { name: 'x', logger: false }\n")
+  // mysql2 is not a dependency of this workspace, so the driver cannot resolve.
+  fs.writeFileSync(
+    path.join(dir, 'config', 'database.ts'),
+    "export default { client: 'mysql2', connection: { host: '127.0.0.1' } }\n",
+  )
+  fs.writeFileSync(path.join(dir, 'start', 'routes.ts'), 'export default function routes() {}\n')
+
+  await assert.rejects(
+    () => createApp(dir),
+    (err: Error) => {
+      assert.match(err.message, /\[lugh\]/, 'the framework owns the message')
+      assert.match(err.message, /mysql2/, 'and still names the driver')
+      assert.match(err.message, /npm install/, 'and says what to do about it')
+      assert.doesNotMatch(err.message, /Require stack/, 'without the require stack')
+      return true
+    },
+  )
+})
+
 test('graceful shutdown drains in-flight requests and closes the DB pool', async (t) => {
   const { server, db } = await createApp(appRoot)
   await server.listen({ port: 0, host: '127.0.0.1' })

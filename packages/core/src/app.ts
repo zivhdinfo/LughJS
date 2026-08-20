@@ -97,7 +97,12 @@ async function bootApp(root: string): Promise<LughApp> {
   const config = await importDefault<AppConfig>(resolveProjectFile(root, 'config', 'app'))
   const dbConfig = await importDefault<Knex.Config>(resolveProjectFile(root, 'config', 'database'))
 
-  const db = createDatabase(dbConfig)
+  let db: Knex
+  try {
+    db = createDatabase(dbConfig)
+  } catch (err) {
+    throw explainDriverFailure(err, root)
+  }
   const container = buildContainer({ db, config, env })
 
   await registerFolder(container, path.join(root, 'app', 'services'))
@@ -135,6 +140,34 @@ async function bootApp(root: string): Promise<LughApp> {
   await server.ready()
 
   return { server, db, container, env, config }
+}
+
+/**
+ * Turns a missing database driver into something readable.
+ *
+ * knex throws when it cannot require the driver for the configured client, and
+ * the message arrives wrapped in a six-frame require stack pointing into knex's
+ * own internals. The cause is almost always that nobody has run `npm install`
+ * in the project yet, and nothing in that stack says so. The driver name is
+ * kept, because it is the one useful piece of the original.
+ */
+function explainDriverFailure(err: unknown, root: string): unknown {
+  const message = err instanceof Error ? err.message : String(err)
+  const missing = /Cannot find module '([^']+)'/.exec(message)
+  if (!missing) return err
+
+  const driver = missing[1]
+  const installed = fs.existsSync(path.join(root, 'node_modules'))
+  const hint = installed
+    ? `Add it with: npm install ${driver}`
+    : `There is no node_modules in ${root}. Run: npm install`
+
+  return new Error(
+    `[lugh] The database driver "${driver}" is not available.\n\n` +
+      `config/database asks for it, so the connection cannot be opened.\n` +
+      `${hint}`,
+    { cause: err },
+  )
 }
 
 interface HttpErrorLike {

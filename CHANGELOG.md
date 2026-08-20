@@ -1,5 +1,59 @@
 # Changelog
 
+## [2.2.0]
+
+### Changed
+
+**`lugh new` draws its questions.** The prompts were numbered lines of plain
+text, which read as a script rather than as a tool:
+
+```
+Language
+  1) TypeScript  (default)
+  2) JavaScript
+> 1
+```
+
+They are now the boxed, arrow-key form the ecosystem uses:
+
+```
+┌  Create a new Lugh project
+│
+◆  Project name?
+│  my-app
+│
+◆  Language?
+│  ● TypeScript (recommended)
+│  ○ JavaScript
+```
+
+Drawing them needs raw mode, and raw mode needs a real console. Terminals that
+report no TTY, Git Bash on Windows among them, still get the numbered questions,
+because the drawing library hangs rather than failing when it cannot switch the
+terminal over. Ctrl+C exits 130 and writes nothing.
+
+This adds `@clack/prompts`, which is 6 packages and 305 KB, under 1% of an
+install.
+
+### Fixed
+
+- **A missing database driver dumped a require stack.** Skipping `npm install`
+  in a new project produced forty lines from inside knex's dialect loader, none
+  of which mentioned the missing step. The framework now catches it:
+
+  ```
+  [lugh] The database driver "mysql2" is not available.
+
+  config/database asks for it, so the connection cannot be opened.
+  There is no node_modules in /path/to/app. Run: npm install
+  ```
+
+### Documentation
+
+- `docs/cli.md` explains how to reach the `lugh` binary. It is installed into
+  the project rather than onto PATH, so a bare `lugh` is not recognised, and the
+  three ways round that were written down nowhere.
+
 ## [2.1.0]
 
 ### Added

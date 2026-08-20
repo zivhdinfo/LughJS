@@ -16,6 +16,7 @@ import {
   writeIfAbsent,
   type Language,
 } from './generators.js'
+import { note, outro } from '@clack/prompts'
 import {
   resolveOptions,
   scaffoldProject,
@@ -212,9 +213,17 @@ export async function main(argv: string[]): Promise<void> {
       const summary: string[] = [result.options.language, result.options.database]
       if (result.options.auth) summary.push('auth')
       if (result.options.ai !== 'none') summary.push(`ai:${result.options.ai}`)
-      console.log(`\nCreated ${result.options.name} (${summary.join(', ')})`)
-      for (const f of result.files) console.log(`  ${f}`)
-      console.log(`\nNext:\n  cd ${result.options.name}\n  npm install\n  npm run migrate\n  npm run dev\n`)
+
+      // `npm install` comes first for a reason: without it the project's own
+      // driver is missing, and the failure surfaces as a stack trace from
+      // inside knex rather than as anything to do with the missing step.
+      const next = [
+        `cd ${result.options.name}`,
+        'npm install',
+        'npm run migrate',
+        'npm run dev',
+      ]
+      reportScaffold(result.options.name, summary, result.files, next)
     })
 
   // ── file generators ──
@@ -368,6 +377,22 @@ export async function main(argv: string[]): Promise<void> {
     })
 
   await program.parseAsync([process.argv[0] as string, 'lugh', ...argv])
+}
+
+/**
+ * Prints the result of a scaffold. Uses the drawn box when the prompts did, so
+ * the summary does not change shape halfway through the same session.
+ */
+function reportScaffold(name: string, summary: string[], files: string[], next: string[]): void {
+  const drawn = Boolean(process.stdout.isTTY) && !process.env.CI
+  if (drawn) {
+    note(files.join('\n'), `${files.length} files`)
+    outro(`Created ${name} (${summary.join(', ')})\n\n  ${next.join('\n  ')}\n`)
+    return
+  }
+  console.log(`\nCreated ${name} (${summary.join(', ')})`)
+  for (const f of files) console.log(`  ${f}`)
+  console.log(`\nNext:\n  ${next.join('\n  ')}\n`)
 }
 
 function assertChoice(flag: string, value: string, allowed: string[]): string {

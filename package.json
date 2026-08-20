@@ -21,7 +21,7 @@
   "overrides": {
     "hyperid": "4.0.0"
   },
-  "version": "2.1.0",
+  "version": "2.2.0",
   "author": "Khada Sha",
   "license": "MIT",
   "description": "Lugh: structure for Node HTTP services",

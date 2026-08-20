@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { createInterface } from 'node:readline/promises'
+import { cancel, confirm, intro, isCancel, outro, select, text } from '@clack/prompts'
 import { migrationTemplate, timestamp, write, type Language } from './generators.js'
 import { aiFiles } from './ai-templates.js'
 
@@ -101,6 +102,113 @@ async function askLine(rl: ReturnType<typeof createInterface>, prompt: string): 
   }
 }
 
+/** Thrown when the person answering presses Ctrl+C. */
+export class PromptCancelled extends Error {
+  readonly code = 'LUGH_CANCELLED'
+  constructor() {
+    super('cancelled')
+  }
+}
+
+/**
+ * The drawn prompts need raw mode to read arrow keys, and raw mode needs a real
+ * console. Several terminals people use report no TTY, Git Bash on Windows
+ * among them, and the library hangs rather than failing when it cannot switch
+ * the terminal over. Those fall back to the plain numbered questions below.
+ */
+function canDrawPrompts(): boolean {
+  return Boolean(process.stdin.isTTY) && typeof process.stdin.setRawMode === 'function' && !process.env.CI
+}
+
+/** Unwraps a prompt result, turning a Ctrl+C into a thrown cancellation. */
+function unwrap<T>(value: T | symbol): T {
+  if (isCancel(value)) {
+    cancel('Cancelled. Nothing was written.')
+    throw new PromptCancelled()
+  }
+  return value as T
+}
+
+async function drawnPrompts(
+  partial: Partial<ScaffoldOptions>,
+  defaults: ScaffoldOptions,
+): Promise<ScaffoldOptions> {
+  intro('Create a new Lugh project')
+
+  const name =
+    partial.name ??
+    unwrap(
+      await text({
+        message: 'Project name?',
+        placeholder: defaults.name,
+        defaultValue: defaults.name,
+        validate: (value) => {
+          if (!value) return undefined
+          try {
+            assertValidProjectName(value)
+            return undefined
+          } catch (err) {
+            return (err as Error).message.replace('[lugh] ', '')
+          }
+        },
+      }),
+    )
+
+  const language =
+    partial.language ??
+    unwrap(
+      await select({
+        message: 'Language?',
+        initialValue: defaults.language,
+        options: [
+          { value: 'ts' as Language, label: 'TypeScript', hint: 'recommended' },
+          { value: 'js' as Language, label: 'JavaScript' },
+        ],
+      }),
+    )
+
+  const database =
+    partial.database ??
+    unwrap(
+      await select({
+        message: 'Database?',
+        initialValue: defaults.database,
+        options: [
+          { value: 'sqlite' as DatabaseChoice, label: 'SQLite', hint: 'better-sqlite3, zero setup' },
+          { value: 'postgres' as DatabaseChoice, label: 'PostgreSQL', hint: 'pg' },
+          { value: 'mysql' as DatabaseChoice, label: 'MySQL or MariaDB', hint: 'mysql2' },
+        ],
+      }),
+    )
+
+  const auth =
+    partial.auth ??
+    unwrap(
+      await confirm({
+        message: 'Include the auth scaffold?',
+        initialValue: defaults.auth,
+      }),
+    )
+
+  const ai =
+    partial.ai ??
+    unwrap(
+      await select({
+        message: 'Instructions for AI coding assistants?',
+        initialValue: defaults.ai,
+        options: [
+          { value: 'none' as AiChoice, label: 'None' },
+          { value: 'claude' as AiChoice, label: 'Claude Code', hint: 'CLAUDE.md and .claude/ skills' },
+          { value: 'agents' as AiChoice, label: 'AGENTS.md', hint: 'portable, read by several tools' },
+          { value: 'both' as AiChoice, label: 'Both' },
+        ],
+      }),
+    )
+
+  assertValidProjectName(name)
+  return { name, language, database, auth, ai }
+}
+
 /**
  * Fills in whatever the caller did not pass on the command line by prompting.
  *
@@ -134,6 +242,8 @@ export async function resolveOptions(
     assertValidProjectName(defaults.name)
     return defaults
   }
+
+  if (canDrawPrompts()) return drawnPrompts(partial, defaults)
 
   const rl = createInterface({ input: process.stdin, output: process.stdout })
   try {

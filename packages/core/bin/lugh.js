@@ -18,9 +18,13 @@ const { main } = await import('@lughjs/core/cli')
 try {
   await main(process.argv.slice(2))
 } catch (err) {
-  // Commander throws on --help/--version; those are not failures.
+  // Commander throws on --help/--version, and the prompts throw when somebody
+  // presses Ctrl+C. Neither is a failure, and neither deserves a stack trace.
   if (err?.code === 'commander.helpDisplayed' || err?.code === 'commander.version') {
     process.exit(0)
+  }
+  if (err?.code === 'LUGH_CANCELLED') {
+    process.exit(130)
   }
   console.error(err?.message ?? err)
   // The stack is what you need when a migration or a config file throws.
