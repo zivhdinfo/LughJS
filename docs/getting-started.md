@@ -144,3 +144,9 @@ controller, the method is bound, and the server stores a plain function. See
 - [Project structure](project-structure.md): what each folder does and the boot order
 - [Routing](routing.md): groups, schemas, per-route middleware
 - [Database](database.md): migrations, seeders, relations
+- [Configuration](configuration.md): `config/*` and validation at boot
+- [Security](security.md): error responses, response allow-lists, the auth scaffold
+- [Deployment](deployment.md): what to set before the first deploy
+- [CLI reference](cli.md): every command and flag
+
+The full index is in [README.md](README.md).

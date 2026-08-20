@@ -12,9 +12,10 @@
 Please do not open a public issue for a security problem.
 
 Report it privately through GitHub's
-[security advisory form](https://github.com/zivhdinfo/LughJS/security/advisories/new).
-If that is not available to you, email the maintainers listed in
-[package.json](package.json).
+[security advisory form](https://github.com/zivhdinfo/LughJS/security/advisories/new),
+which is visible only to the maintainers. If you cannot use it, open a public
+issue that says a security report is waiting and asks for a private channel, and
+do not include the details there.
 
 Include, as far as you can:
 

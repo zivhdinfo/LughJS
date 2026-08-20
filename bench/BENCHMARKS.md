@@ -1,6 +1,6 @@
 # Benchmarks
 
-Generated 2026-08-20T00:39:18.883Z by `npm run bench`.
+Generated 2026-08-20T02:17:11.744Z by `npm run bench`.
 
 ## Machine
 
@@ -38,25 +38,25 @@ Median of 5 rounds, 64 concurrent connections.
 
 | suite | what it exercises | req/s | p50 | p99 | MB/s | spread |
 |---|---|---|---|---|---|---|
-| `json` | route match + JSON serialization, no I/O | **29,602** | 2.00ms | 3.00ms | 5.6 | ±3.8% |
-| `query` | controller → service → one indexed row out of 10,000 | **10,242** | 6.00ms | 8.00ms | 2.0 | ±2.2% |
-| `render` | a full table read, HTML escaping, an added row and a sort | **9,179** | 6.00ms | 9.00ms | 11.9 | ±2.8% |
-| `write` | schema validation, an insert and a serialized 201 | **6,700** | 8.00ms | 18.00ms | 1.6 | ±0.9% |
+| `json` | route match + JSON serialization, no I/O | **28,553** | 2.00ms | 3.00ms | 5.4 | ±7.4% |
+| `query` | controller → service → one indexed row out of 10,000 | **10,030** | 6.00ms | 9.00ms | 1.9 | ±4.4% |
+| `render` | a full table read, HTML escaping, an added row and a sort | **8,893** | 6.00ms | 10.00ms | 11.5 | ±5.5% |
+| `write` | schema validation, an insert and a serialized 201 | **6,400** | 9.00ms | 19.00ms | 1.6 | ±6.5% |
 
 Every individual sample, so the spread is not hidden behind a median:
 
-- `json`: 29602, 30329, 29412, 29195, 30194 req/s
-- `query`: 10149, 10247, 10242, 10175, 10373 req/s
-- `render`: 9243, 9189, 8984, 9179, 9163 req/s
-- `write`: 6655, 6700, 6713, 6665, 6714 req/s
+- `json` : 28348, 29147, 29029, 27036, 28553 req/s
+- `query` : 9672, 10030, 10047, 9659, 10104 req/s
+- `render` : 8757, 9043, 8580, 9073, 8893 req/s
+- `write` : 6523, 6400, 6153, 6382, 6570 req/s
 
 ## Startup and memory
 
 | | |
 |---|---|
 | cold start (median of 5) | 953 ms |
-| resident memory, idle | 105 MB |
-| resident memory, under load | 302 MB |
+| resident memory, idle | 110 MB |
+| resident memory, under load | 305 MB |
 
 Cold start includes reading the config, opening the pool, constructing every
 service and controller, compiling the schemas and installing the routes. That is the
@@ -70,7 +70,7 @@ the framework.
 
 | suite | plain | hardened | cost |
 |---|---|---|---|
-| `json` | 29,602 | 16,439 | -44.5% |
-| `query` | 10,242 | 7,960 | -22.3% |
-| `render` | 9,179 | 6,878 | -25.1% |
-| `write` | 6,700 | 5,205 | -22.3% |
+| `json` | 28,553 | 15,632 | -45.3% |
+| `query` | 10,030 | 7,345 | -26.8% |
+| `render` | 8,893 | 6,494 | -27.0% |
+| `write` | 6,400 | 4,917 | -23.2% |

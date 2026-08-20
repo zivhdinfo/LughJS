@@ -114,8 +114,12 @@ create(authorId: number, input: PostInput) {
 ```
 
 Note that `authorId` comes from the verified token, not from the body, so a
-client cannot attribute a row to somebody else. The generated service templates
-carry a comment saying exactly this.
+client cannot attribute a row to somebody else.
+
+`lugh make:service` generates this shape for you. It emits a `FILLABLE` list and
+a `pick()` helper that both `create` and `update` go through, and the list starts
+empty, so a generated service writes nothing until you say which columns a client
+may set.
 
 ## Generating the files
 

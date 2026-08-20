@@ -22,6 +22,7 @@
     "hyperid": "4.0.0"
   },
   "version": "2.0.0",
+  "author": "Khada Sha",
   "license": "MIT",
   "description": "Lugh: structure for Node HTTP services",
   "repository": {

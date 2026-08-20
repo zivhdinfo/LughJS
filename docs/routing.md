@@ -104,7 +104,14 @@ Route.post('/posts', 'PostController.store').schema({
 })
 ```
 
-A failing body produces a 400 with a consistent shape:
+`additionalProperties: false` **strips** an unlisted property rather than
+rejecting the request. A body carrying `user_id` when the schema does not list
+it produces a 201, not a 400, and the handler never sees the field. That is
+usually what you want, and it is worth knowing before you write a test asserting
+the 400 that does not come.
+
+A body that fails validation for a listed property, a missing `required` field or
+a wrong type, does produce a 400, with a consistent shape:
 
 ```json
 {

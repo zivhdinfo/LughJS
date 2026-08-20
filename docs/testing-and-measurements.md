@@ -163,30 +163,34 @@ expected status, content type and body on every measured run.
 
 | suite | req/s | p50 | p99 | spread |
 |---|---|---|---|---|
-| `json` | 29,602 | 2.00 ms | 3.00 ms | ±3.8% |
-| `query` | 10,242 | 6.00 ms | 8.00 ms | ±2.2% |
-| `render` | 9,179 | 6.00 ms | 9.00 ms | ±2.8% |
-| `write` | 6,700 | 8.00 ms | 18.00 ms | ±0.9% |
+| `json` | 28,553 | 2.00 ms | 3.00 ms | ±7.4% |
+| `query` | 10,030 | 6.00 ms | 9.00 ms | ±4.4% |
+| `render` | 8,893 | 6.00 ms | 10.00 ms | ±5.5% |
+| `write` | 6,400 | 9.00 ms | 19.00 ms | ±6.5% |
 
-Cold start 953 ms; resident memory 105 MB idle, 302 MB under load.
+Cold start 953 ms; resident memory 110 MB idle, 305 MB under load.
 
 The hardened profile (security headers, CORS, rate limiting, token
-verification) costs between a fifth and nearly half of throughput:
+verification) costs roughly a quarter of throughput on the suites that touch the
+database, and nearly half on the one that does not:
 
 | suite | plain | hardened | cost |
 |---|---|---|---|
-| `json` | 29,602 | 16,439 | −44.5% |
-| `query` | 10,242 | 7,960 | −22.3% |
-| `render` | 9,179 | 6,878 | −25.1% |
-| `write` | 6,700 | 5,205 | −22.3% |
+| `json` | 28,553 | 15,632 | −45.3% |
+| `query` | 10,030 | 7,345 | −26.8% |
+| `render` | 8,893 | 6,494 | −27.0% |
+| `write` | 6,400 | 4,917 | −23.2% |
 
 `json` pays the most because it is the only suite with no I/O to hide the
 middleware behind: the fixed per-request cost is the whole cost. On the three
-suites that touch the database, the same middleware is a fifth to a quarter,
+suites that touch the database the same middleware costs between 23% and 27%,
 which is the honest way to read that first number too.
 
-The spread across rounds stayed between ±0.9% and ±3.8%, so a change worth
-acting on has to be larger than that before it means anything.
+The spread across rounds stayed between ±4.4% and ±7.4%, so a change worth
+acting on has to be larger than that before it means anything. An earlier run of
+the same build reported ±0.9% to ±3.8% on a quieter machine, which is the point
+of printing the spread at all: it tells you how much of a difference between two
+runs is the machine rather than the code.
 
 ### Reading the numbers
 

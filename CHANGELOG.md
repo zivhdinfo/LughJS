@@ -1,62 +1,5 @@
 # Changelog
 
-## [Unreleased]
-
-### Fixed: distribution
-
-- **`@lughjs/core` is published as compiled JavaScript.** The package pointed
-  `main`, `types` and `exports` at `src/index.ts`. Node refuses to strip types
-  from anything under `node_modules`, so `import '@lughjs/core'` failed with
-  `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` unless the process happened to
-  have a TypeScript loader registered. The build already existed and was simply
-  never referenced. The tarball now ships `dist/` with declarations and
-  standalone source maps; inside this repository the `lugh-dev` export condition
-  still resolves to `src/`, so the test suite runs against the sources.
-- **The CLI shim imports the CLI through the package exports** instead of a
-  relative path, so it cannot end up holding a second copy of the module-global
-  `Route` registrar while the project holds the first. That combination reported
-  an empty table from `list:routes`.
-- **`lugh --version` reads the version from `package.json`** rather than a
-  literal that had to be kept in step by hand.
-
-### Fixed: security
-
-- **Generated services no longer mass-assign.** `lugh make:service` emitted
-  `Model.query().insert(input)` with a comment warning against exactly that. It
-  now emits a `FILLABLE` allow-list and a `pick()` helper, and both `create` and
-  `update` go through it.
-- **The reference application checks ownership on writes.** `PUT`, `PATCH` and
-  `DELETE` on `/api/posts/:id` were guarded by `auth` and nothing else, so any
-  authenticated user could edit or delete any post. Both statements are now
-  scoped by `user_id`, which also closes the check-then-write race, and the
-  controller distinguishes 404 from 403.
-
-### Fixed: correctness
-
-- **The benchmark fixture test no longer depends on checkout line endings.** A
-  Windows clone with `core.autocrlf=true` failed a comparison that had nothing
-  to do with the data. `.gitattributes` now pins LF, marks the hashed upstream
-  SQL as untouchable, and the test normalises newlines before comparing.
-
-### Changed
-
-- **The reference application logs on `onResponse`, not `onRequest`.** The
-  server's own logger already writes an "incoming request" line; the hook was
-  duplicating it and adding nothing. It now records the status code, which is
-  the part that was missing.
-- **Documentation, comments and CLI output no longer use the em dash.**
-  `npm run lint:prose` enforces this and CI runs it. The two rows of the pinned
-  TechEmpower fixture that contain one are exempt, because they are verbatim
-  upstream data.
-- **README rewritten** in the shape the ecosystem expects: badges, install,
-  features, a runnable example, then the documentation table.
-
-### Added
-
-- `SECURITY.md`, `CONTRIBUTING.md`, `packages/core/README.md`, `.gitattributes`,
-  and `repository`/`homepage`/`bugs` metadata on both manifests.
-- `npm run lint:prose`, wired into CI along with an explicit build step.
-
 ## [2.0.0]
 
 The first release under the Lugh name. Versioning starts here. The package is
@@ -100,6 +43,23 @@ goes.
 the database layer, configuration, security, the CLI, the design decisions, and
 the test and measurement method.
 
+### Fixed: distribution
+
+- **The package is published as compiled JavaScript.** `main`, `types` and
+  `exports` pointed at `src/index.ts`. Node refuses to strip types from anything
+  under `node_modules`, so `import '@lughjs/core'` failed with
+  `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` unless the importing process
+  happened to have a TypeScript loader registered. The build already existed and
+  was simply never referenced. The tarball ships `dist/` with declarations and
+  standalone source maps; inside the repository the `lugh-dev` export condition
+  resolves to `src/`, so the test suite still runs against the sources.
+- **The CLI shim imports through the package exports** rather than a relative
+  path, so it cannot hold a second copy of the module-global `Route` registrar
+  while the project holds the first. That combination made `list:routes` report
+  an empty table.
+- **`lugh --version` reads `package.json`** instead of a literal that had to be
+  kept in step by hand.
+
 ### Fixed: security
 
 - **A 5xx no longer echoes the internal error message.** `message` is
@@ -123,6 +83,16 @@ the test and measurement method.
 - **Login does not reveal which addresses are registered**, using a dummy comparison
   keeps the timing and the message identical for an unknown email.
 - Password hashing cost raised from 10 to 12.
+
+- **Generated services do not mass-assign.** `lugh make:service` emitted
+  `Model.query().insert(input)` under a comment warning against exactly that. It
+  emits a `FILLABLE` allow-list and a `pick()` helper, and `create` and `update`
+  both go through it.
+- **The reference application checks ownership on writes.** `PUT`, `PATCH` and
+  `DELETE` on `/api/posts/:id` were guarded by `auth` and nothing more, so any
+  authenticated user could edit or delete any post. Both statements are scoped
+  by `user_id`, which also closes the check-then-write race, and the controller
+  distinguishes 404 from 403.
 
 ### Fixed: correctness
 
@@ -161,6 +131,11 @@ the test and measurement method.
 - **The CLI exits non-zero on failure**, and prints a stack with `LUGH_DEBUG=1`.
 - The duplicated `toCamelCase` implementation is gone; there is one.
 
+- **The benchmark fixture test does not depend on checkout line endings.** A
+  Windows clone with `core.autocrlf=true` failed a comparison that had nothing
+  to do with the data. `.gitattributes` pins LF, marks the hashed upstream SQL
+  as untouchable, and the test normalises newlines before comparing.
+
 ### Fixed: the measurement harness
 
 The previous harness could not support the numbers it published.
@@ -193,3 +168,26 @@ The previous harness could not support the numbers it published.
 - `app/middleware` has a stated contract: a default-exported function is global
   middleware, a module without one is left alone for per-route guards, and files
   load in sorted order, hence the `005_`/`010_`/`020_` prefixes.
+- The reference application logs on `onResponse` rather than `onRequest`. The
+  server's own logger already writes an "incoming request" line, so the hook was
+  duplicating it; it now records the status code, which was the missing part.
+- Documentation, comments and CLI output do not use the em dash.
+  `npm run lint:prose` enforces this and CI runs it. Two rows of the pinned
+  TechEmpower fixture are exempt, because they are verbatim upstream data.
+
+### Documentation
+
+- A README in the shape the ecosystem expects: badges, install, features, a
+  runnable example, benchmarks, then the guide index.
+- `SECURITY.md` with a disclosure process, a scope, and the guarantees a report
+  can be written against.
+- `CONTRIBUTING.md` covering setup, how `@lughjs/core` resolves in the
+  workspace, the checks CI runs, and the fixture rules.
+- `CODE_OF_CONDUCT.md`, `docs/README.md` as a guide index, and
+  `docs/deployment.md` covering environment, migrations as a deploy step,
+  containers, health checks, proxies and the shutdown budget.
+- A README for `apps/demo` that maps each pattern to the file demonstrating it.
+- Issue and pull request templates, with security reports routed to the private
+  advisory form rather than a public issue.
+- A package README for the npm page, `.gitattributes`, and
+  `repository`/`homepage`/`bugs` metadata on both manifests.

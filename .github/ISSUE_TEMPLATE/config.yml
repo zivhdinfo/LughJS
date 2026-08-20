@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/zivhdinfo/LughJS/security/advisories/new
+    about: Report privately. Please do not open a public issue for a security problem.
+  - name: Documentation
+    url: https://github.com/zivhdinfo/LughJS/tree/main/docs
+    about: The guides, including deployment and security. Check here before filing.

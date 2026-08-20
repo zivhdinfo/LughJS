@@ -158,3 +158,7 @@ otherwise a client can forge `X-Forwarded-For` and evade the limit instead.
 - [ ] `logger` at a sensible level; the app logs the full error, so ship those logs
 - [ ] `response` schemas on any route that returns user records
 - [ ] `npm audit --omit=dev` clean
+
+[deployment.md](deployment.md) covers the operational half of this list: how to
+inject the environment, where to run migrations, and how to give the shutdown
+sequence room to finish.

@@ -1,0 +1,47 @@
+name: Feature request
+description: Propose something the framework should do
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Lugh is deliberately small. Before opening this, it is worth reading
+        [design-notes.md](https://github.com/zivhdinfo/LughJS/blob/main/docs/design-notes.md#deliberately-absent),
+        which lists what is left out on purpose and why.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: |
+        What are you trying to do, and what stops you? Describe the situation
+        rather than the API you have in mind, because the situation is what
+        decides whether the API is the right one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you propose
+      description: What it would look like to use. Code is welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead
+      description: |
+        A library, a middleware module, a helper in your own project. If a
+        workaround exists and is fine, say so: that is an argument for leaving
+        the framework alone.
+
+  - type: checkboxes
+    id: boot
+    attributes:
+      label: Cost
+      options:
+        - label: This can be resolved at boot rather than per request
+        - label: This adds no new runtime dependency
+        - label: I do not know, and would like to discuss it

@@ -76,5 +76,6 @@
   "bugs": {
     "url": "https://github.com/zivhdinfo/LughJS/issues"
   },
+  "author": "Khada Sha",
   "license": "MIT"
 }
