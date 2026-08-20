@@ -1,5 +1,65 @@
 # Changelog
 
+## [2.1.0]
+
+### Added
+
+**`--ai`, instructions for AI coding assistants.** A fifth question in
+`lugh new`, with four answers: `none`, `claude`, `agents` or `both`.
+
+- `agents` writes `AGENTS.md`, the portable convention several tools read.
+- `claude` writes `CLAUDE.md`, a `.claude/settings.json` permission list, and
+  `.claude/skills/` containing `lugh-resource`, `lugh-migrations` and, when the
+  auth scaffold is present, `lugh-auth`.
+- `both` writes all of it, with `CLAUDE.md` deferring to `AGENTS.md` rather than
+  repeating it.
+
+The content follows the project's other answers. A JavaScript project is not
+told to write `static override tableName`, a project without the auth scaffold
+gets no token instructions, and the migration skill describes the database that
+was actually chosen, including the way that dialect behaves when a migration
+fails part way. What goes in these files is only what an assistant cannot infer
+from the code in front of it: the conventions the framework enforces at boot,
+and the mistakes that look correct until the second boot or the first hostile
+request.
+
+`.claude/settings.json` pre-approves the routine commands and denies
+`migration:fresh`, which drops every table in the schema.
+
+### Fixed
+
+- **`lugh new` asked nothing in terminals that do not report a TTY.** Prompting
+  was gated on `process.stdin.isTTY`, which is false in Git Bash on Windows and
+  in several wrapped terminals. The command silently produced a default project
+  and never asked a question. Prompting is now attempted whenever `--yes` was
+  not passed, and when stdin turns out to be empty the defaults are printed with
+  the flags that set them, rather than applied in silence.
+- **A prompt on an already-closed stdin hung forever.** `rl.question()` never
+  settles on an ended stream, so the fallback above had to race the readline
+  `close` event rather than wait on an answer that could not arrive.
+- **A missing environment variable reported `EnvMissingError: undefined`.**
+  envalid gives that error the literal message `"undefined"`, so the obvious
+  `String(err)` rendered nothing useful. The boot failure now names each
+  variable, says whether it was missing or invalid, and points at the `.env`
+  that is not there:
+
+  ```
+  [lugh] Invalid environment variables:
+    JWT_SECRET: missing, and config/env declares no default for it
+
+  There is no .env in /srv/app. Copy .env.example to .env and fill it in, or
+  inject these variables from the environment.
+  ```
+
+- **`npm publish` warned that `bin[lugh]` was cleaned.** npm normalises
+  `./bin/lugh.js` to `bin/lugh.js`; the manifest now carries the normalised
+  form.
+
+### Documentation
+
+- `docs/cli.md` covers `--ai`, what each value writes, and what happens when
+  there is nobody to answer the questions.
+
 ## [2.0.0]
 
 The first release under the Lugh name. Versioning starts here. The package is

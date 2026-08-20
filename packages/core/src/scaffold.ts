@@ -3,14 +3,19 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import { migrationTemplate, timestamp, write, type Language } from './generators.js'
+import { aiFiles } from './ai-templates.js'
 
 export type DatabaseChoice = 'sqlite' | 'postgres' | 'mysql'
+
+/** Which set of AI assistant instructions to write, if any. */
+export type AiChoice = 'none' | 'claude' | 'agents' | 'both'
 
 export interface ScaffoldOptions {
   name: string
   language: Language
   database: DatabaseChoice
   auth: boolean
+  ai: AiChoice
 }
 
 const CORE_VERSION = '^2.0.0'
@@ -48,7 +53,7 @@ async function ask<T extends string>(
   fallback: T,
 ): Promise<T> {
   const lines = choices.map((c, i) => `  ${i + 1}) ${c.label}${c.value === fallback ? '  (default)' : ''}`)
-  const answer = (await rl.question(`\n${question}\n${lines.join('\n')}\n> `)).trim()
+  const answer = (await askLine(rl, `\n${question}\n${lines.join('\n')}\n> `)).trim()
   if (!answer) return fallback
   const byIndex = choices[Number(answer) - 1]
   if (byIndex) return byIndex.value
@@ -64,14 +69,47 @@ async function askYesNo(
   fallback: boolean,
 ): Promise<boolean> {
   const hint = fallback ? 'Y/n' : 'y/N'
-  const answer = (await rl.question(`\n${question} (${hint}) > `)).trim().toLowerCase()
+  const answer = (await askLine(rl, `\n${question} (${hint}) > `)).trim().toLowerCase()
   if (!answer) return fallback
   return answer.startsWith('y')
 }
 
+/** Raised when stdin reaches end of file, so prompting cannot continue. */
+class StdinClosed extends Error {}
+
+/**
+ * Reads one answer, and distinguishes "the user pressed enter" from "there is
+ * nobody there".
+ *
+ * `rl.question()` on a stream that has already ended never settles, so waiting
+ * on it alone hangs the command forever. readline emits `close` when its input
+ * ends, and racing against that event is the only signal that arrives in both
+ * the "ended before we asked" and "ended while we waited" cases.
+ */
+async function askLine(rl: ReturnType<typeof createInterface>, prompt: string): Promise<string> {
+  let onClose = (): void => {}
+  const closed = new Promise<never>((_resolve, reject) => {
+    onClose = () => reject(new StdinClosed())
+    rl.once('close', onClose)
+  })
+  try {
+    // Both promises carry a handler, so the loser rejecting later is not an
+    // unhandled rejection.
+    return await Promise.race([rl.question(prompt), closed])
+  } finally {
+    rl.off('close', onClose)
+  }
+}
+
 /**
  * Fills in whatever the caller did not pass on the command line by prompting.
- * With `--yes`, or on a non-interactive stdin, defaults are used silently.
+ *
+ * Prompting is attempted whenever `--yes` was not given, rather than only when
+ * `process.stdin.isTTY` is true. That flag is false in several terminals people
+ * really use, Git Bash on Windows among them, and gating on it meant the
+ * command silently produced a default project and never asked anything. If
+ * stdin turns out to be empty, the questions are abandoned and the defaults are
+ * reported rather than applied in silence.
  */
 export async function resolveOptions(
   partial: Partial<ScaffoldOptions>,
@@ -82,17 +120,17 @@ export async function resolveOptions(
     language: partial.language ?? 'ts',
     database: partial.database ?? 'sqlite',
     auth: partial.auth ?? false,
+    ai: partial.ai ?? 'none',
   }
 
-  const needsPrompt =
-    opts.interactive &&
-    process.stdin.isTTY &&
-    (partial.name === undefined ||
-      partial.language === undefined ||
-      partial.database === undefined ||
-      partial.auth === undefined)
+  const missing =
+    partial.name === undefined ||
+    partial.language === undefined ||
+    partial.database === undefined ||
+    partial.auth === undefined ||
+    partial.ai === undefined
 
-  if (!needsPrompt) {
+  if (!opts.interactive || !missing) {
     assertValidProjectName(defaults.name)
     return defaults
   }
@@ -101,7 +139,7 @@ export async function resolveOptions(
   try {
     let name = partial.name
     while (name === undefined) {
-      const answer = (await rl.question(`\nProject name > (${defaults.name}) `)).trim() || defaults.name
+      const answer = (await askLine(rl, `\nProject name > (${defaults.name}) `)).trim() || defaults.name
       try {
         assertValidProjectName(answer)
         name = answer
@@ -137,8 +175,37 @@ export async function resolveOptions(
 
     const auth = partial.auth ?? (await askYesNo(rl, 'Include the auth scaffold (JWT + bcrypt + users table)?', false))
 
+    const ai =
+      partial.ai ??
+      (await ask<AiChoice>(
+        rl,
+        'Instructions for AI coding assistants',
+        [
+          { value: 'none', label: 'None' },
+          { value: 'claude', label: 'Claude Code    CLAUDE.md and .claude/ with project skills' },
+          { value: 'agents', label: 'AGENTS.md      the portable convention, read by several tools' },
+          { value: 'both', label: 'Both' },
+        ],
+        'none',
+      ))
+
     assertValidProjectName(name)
-    return { name, language, database, auth }
+    return { name, language, database, auth, ai }
+  } catch (err) {
+    if (!(err instanceof StdinClosed)) throw err
+    // Nobody is answering. Say so, and say what was used, because a project
+    // that quietly appears with settings the caller never chose is worse than
+    // one that explains itself.
+    assertValidProjectName(defaults.name)
+    console.log(
+      `\n[lugh] stdin is empty, so the questions were skipped. Using: ` +
+        `name=${defaults.name}, language=${defaults.language}, database=${defaults.database}, ` +
+        `auth=${defaults.auth}, ai=${defaults.ai}.` +
+        `\n       To choose instead: lugh new <name> --language=ts|js --database=sqlite|postgres|mysql ` +
+        `--auth|--no-auth --ai=none|claude|agents|both` +
+        `\n       Or pass --yes to accept these defaults without this notice.`,
+    )
+    return defaults
   } finally {
     rl.close()
   }
@@ -935,6 +1002,8 @@ export function scaffoldProject(cwd: string, o: ScaffoldOptions): ScaffoldResult
   ]
 
   if (o.language === 'ts') files.push(['tsconfig.json', TSCONFIG])
+
+  files.push(...aiFiles(o))
 
   if (o.auth) {
     files.push(

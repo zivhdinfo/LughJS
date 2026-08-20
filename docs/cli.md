@@ -26,10 +26,46 @@ lugh new demo --yes                               # defaults, no prompts
 | `-l, --language` | `ts`, `js` | `ts` |
 | `-d, --database` | `sqlite`, `postgres`, `mysql` | `sqlite` |
 | `--auth` / `--no-auth` | n/a | no auth |
+| `--ai <assistant>` | `none`, `claude`, `agents`, `both` | `none` |
 | `-y, --yes` | n/a | prompt |
 
 Refuses to write into a non-empty directory. Generates a random `JWT_SECRET`
 into `.env` when `--auth` is used.
+
+### Instructions for AI assistants
+
+`--ai` writes the project's conventions somewhere an assistant will read them,
+because the rules this framework enforces at boot are exactly the ones a model
+guesses wrong: that the route table has to live inside the exported function,
+that a constructor parameter name is the injection key, that a middleware file
+without a default export is a per-route guard on purpose.
+
+| value | files |
+|---|---|
+| `none` | nothing (default) |
+| `claude` | `CLAUDE.md`, `.claude/settings.json`, `.claude/skills/*/SKILL.md` |
+| `agents` | `AGENTS.md` |
+| `both` | all of the above, with `CLAUDE.md` deferring to `AGENTS.md` |
+
+The content follows the answers to the other questions. A JavaScript project is
+not told to write `static override tableName`, a project without the auth
+scaffold gets no token instructions, and the migration skill describes the
+database you actually chose. `.claude/settings.json` pre-approves the routine
+commands and denies `migration:fresh`, which drops every table in the schema.
+
+These are ordinary files in your project. Edit them.
+
+### When there is nobody to ask
+
+The questions are skipped when stdin is empty, which is what happens in a
+pipeline. The defaults are then printed rather than applied in silence:
+
+```
+[lugh] stdin is empty, so the questions were skipped. Using: name=my-app, ...
+       To choose instead: lugh new <name> --language=ts|js ...
+```
+
+Pass `--yes` when that is what you meant, and the notice goes away.
 
 ## Generators
 

@@ -44,6 +44,7 @@ lugh new demo --yes            # all defaults, no prompts
 | `--language`, `-l` | `ts`, `js` | `ts` |
 | `--database`, `-d` | `sqlite`, `postgres`, `mysql` | `sqlite` |
 | `--auth` / `--no-auth` | n/a | no auth |
+| `--ai <assistant>` | `none`, `claude`, `agents`, `both` | `none` |
 | `--yes`, `-y` | n/a | prompt |
 
 The scaffolder refuses to write into a directory that already has files in it.

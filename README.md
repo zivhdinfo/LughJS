@@ -27,13 +27,19 @@ npm run dev
 
 Your app is on `http://127.0.0.1:3000`.
 
-`lugh new` asks four questions: project name, language (TypeScript or
-JavaScript), database (SQLite, PostgreSQL or MySQL), and whether to include the
-auth scaffold. Answer them as flags to skip the prompts:
+`lugh new` asks five questions: project name, language (TypeScript or
+JavaScript), database (SQLite, PostgreSQL or MySQL), whether to include the auth
+scaffold, and whether to write instructions for AI coding assistants. Answer
+them as flags to skip the prompts:
 
 ```bash
-lugh new shop --language=ts --database=postgres --auth --yes
+lugh new shop --language=ts --database=postgres --auth --ai=both --yes
 ```
+
+`--ai` writes `AGENTS.md`, or `CLAUDE.md` with a `.claude/` directory of project
+skills, or both. The content follows your other answers, and it covers the rules
+this framework enforces at boot, which are the ones a model otherwise guesses
+wrong. See [docs/cli.md](docs/cli.md#instructions-for-ai-assistants).
 
 ## Features
 

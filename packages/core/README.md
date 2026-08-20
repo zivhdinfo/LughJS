@@ -57,7 +57,7 @@ are looking at the terminal, not at 3am in a log.
 
 ## Creating a project
 
-`lugh new` asks four questions and writes a project that runs immediately.
+`lugh new` asks five questions and writes a project that runs immediately.
 
 ```bash
 npx @lughjs/core new my-app
@@ -69,12 +69,18 @@ npx @lughjs/core new my-app
 | Language | `ts`, `js` | `ts` |
 | Database | `sqlite`, `postgres`, `mysql` | `sqlite` |
 | Auth scaffold | yes, no | no |
+| AI assistant instructions | `none`, `claude`, `agents`, `both` | `none` |
 
 Answer them as flags to skip the prompts entirely:
 
 ```bash
-lugh new shop --language=ts --database=postgres --auth --yes
+lugh new shop --language=ts --database=postgres --auth --ai=both --yes
 ```
+
+`--ai` writes `AGENTS.md`, or `CLAUDE.md` with a `.claude/` directory of project
+skills, or both. The content follows your other answers: a JavaScript project is
+not told to write `static override tableName`, and the migration skill describes
+the database you chose.
 
 The auth scaffold adds a `users` table, bcrypt hashing at cost 12, JWT signing
 with an expiry, helmet, CORS with an explicit origin list, rate limiting, and a

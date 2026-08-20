@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
+import { PassThrough } from 'node:stream'
 import { assertValidProjectName, resolveOptions, scaffoldProject, type ScaffoldOptions } from '../src/scaffold.js'
 
 const here = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'))
@@ -149,5 +150,134 @@ test('rejects project names that are not valid package names', () => {
 
 test('resolveOptions fills defaults without prompting when non-interactive', async () => {
   const opts = await resolveOptions({ name: 'quiet' }, { interactive: false })
-  assert.deepEqual(opts, { name: 'quiet', language: 'ts', database: 'sqlite', auth: false } satisfies ScaffoldOptions)
+  assert.deepEqual(
+    opts,
+    { name: 'quiet', language: 'ts', database: 'sqlite', auth: false, ai: 'none' } satisfies ScaffoldOptions,
+  )
+})
+
+test('resolveOptions falls back to defaults when stdin is empty, and says so', async (t) => {
+  // Regression: prompting used to be gated on `process.stdin.isTTY`, which is
+  // false in Git Bash on Windows and in several wrapped terminals. The command
+  // then produced a default project and never asked anything, with no message.
+  // Prompting is now attempted regardless, so the end-of-file path is what has
+  // to stay safe.
+  const realStdin = Object.getOwnPropertyDescriptor(process, 'stdin')
+  const ended = new PassThrough()
+  ended.end()
+  Object.defineProperty(process, 'stdin', { value: ended, configurable: true })
+
+  const said: string[] = []
+  const realLog = console.log
+  console.log = (...args: unknown[]) => said.push(args.join(' '))
+
+  t.after(() => {
+    console.log = realLog
+    if (realStdin) Object.defineProperty(process, 'stdin', realStdin)
+  })
+
+  const opts = await resolveOptions({}, { interactive: true })
+
+  assert.deepEqual(
+    opts,
+    { name: 'my-app', language: 'ts', database: 'sqlite', auth: false, ai: 'none' } satisfies ScaffoldOptions,
+  )
+  assert.match(said.join('\n'), /stdin is empty/, 'the fallback must announce itself rather than be silent')
+  const notice = said.join('\n')
+  assert.match(notice, /lugh new <name>/, 'and show the command form that sets these without prompting')
+  assert.match(notice, /--ai=/, 'including the newest option, so the notice cannot go stale unnoticed')
+})
+
+test('--ai none writes no assistant files', () => {
+  const cwd = tmpdir()
+  const result = scaffoldProject(cwd, { name: 'plain', language: 'ts', database: 'sqlite', auth: false, ai: 'none' })
+  assert.equal(
+    result.files.some((f) => f === 'AGENTS.md' || f === 'CLAUDE.md' || f.startsWith('.claude/')),
+    false,
+  )
+  fs.rmSync(cwd, { recursive: true, force: true })
+})
+
+test('--ai agents writes AGENTS.md and nothing Claude specific', () => {
+  const cwd = tmpdir()
+  const result = scaffoldProject(cwd, { name: 'shop', language: 'ts', database: 'postgres', auth: false, ai: 'agents' })
+
+  assert.ok(result.files.includes('AGENTS.md'))
+  assert.equal(result.files.includes('CLAUDE.md'), false)
+  assert.equal(result.files.some((f) => f.startsWith('.claude/')), false)
+
+  const agents = read(result.root, 'AGENTS.md')
+  assert.match(agents, /PostgreSQL/, 'the chosen database is named')
+  assert.doesNotMatch(agents, /SQLite/, 'and a database that was not chosen is not')
+  assert.match(agents, /route table lives inside the default-exported function/)
+  assert.match(agents, /mass assignment/)
+
+  fs.rmSync(cwd, { recursive: true, force: true })
+})
+
+test('--ai claude writes CLAUDE.md, settings and skills', () => {
+  const cwd = tmpdir()
+  const result = scaffoldProject(cwd, { name: 'shop', language: 'ts', database: 'sqlite', auth: false, ai: 'claude' })
+
+  assert.ok(result.files.includes('CLAUDE.md'))
+  assert.equal(result.files.includes('AGENTS.md'), false)
+  assert.ok(result.files.includes('.claude/settings.json'))
+  assert.ok(result.files.includes('.claude/skills/lugh-resource/SKILL.md'))
+  assert.ok(result.files.includes('.claude/skills/lugh-migrations/SKILL.md'))
+  assert.equal(
+    result.files.includes('.claude/skills/lugh-auth/SKILL.md'),
+    false,
+    'the auth skill is pointless without the auth scaffold',
+  )
+
+  // The settings file is read by a tool, so it has to parse.
+  const settings = JSON.parse(read(result.root, '.claude/settings.json'))
+  assert.ok(Array.isArray(settings.permissions.allow))
+  assert.ok(
+    settings.permissions.deny.some((d: string) => d.includes('migration:fresh')),
+    'the command that drops every table must not be pre-approved',
+  )
+
+  fs.rmSync(cwd, { recursive: true, force: true })
+})
+
+test('every generated skill carries usable frontmatter', () => {
+  const cwd = tmpdir()
+  const result = scaffoldProject(cwd, { name: 'shop', language: 'ts', database: 'mysql', auth: true, ai: 'claude' })
+
+  const skills = result.files.filter((f) => f.startsWith('.claude/skills/'))
+  assert.equal(skills.length, 3, 'resource, migrations and auth')
+
+  for (const rel of skills) {
+    const body = read(result.root, rel)
+    const m = body.match(/^---\nname: (.+)\ndescription: (.+)\n---\n/)
+    assert.ok(m, `${rel} must open with name and description frontmatter`)
+    assert.ok((m as RegExpMatchArray)[1].length > 0, `${rel} needs a name`)
+    assert.ok(
+      (m as RegExpMatchArray)[2].length > 40,
+      `${rel} needs a description that says when to use it, not a label`,
+    )
+  }
+
+  fs.rmSync(cwd, { recursive: true, force: true })
+})
+
+test('assistant instructions follow the language and the auth choice', () => {
+  const cwd = tmpdir()
+  const ts = scaffoldProject(cwd, { name: 'a', language: 'ts', database: 'sqlite', auth: true, ai: 'both' })
+  const tsDoc = read(ts.root, 'AGENTS.md')
+  assert.match(tsDoc, /static override tableName/, 'TypeScript needs the override keyword')
+  assert.match(tsDoc, /JWT_SECRET/, 'the auth scaffold is documented when it is present')
+
+  const js = scaffoldProject(cwd, { name: 'b', language: 'js', database: 'sqlite', auth: false, ai: 'both' })
+  const jsDoc = read(js.root, 'AGENTS.md')
+  assert.doesNotMatch(jsDoc, /static override tableName/, 'override is invalid syntax in JavaScript')
+  assert.doesNotMatch(jsDoc, /JWT_SECRET/, 'no auth scaffold, no auth instructions')
+  assert.doesNotMatch(jsDoc, /npm run typecheck/, 'there is no typecheck script in a JavaScript project')
+
+  // With `both`, CLAUDE.md defers rather than repeating the conventions.
+  const claude = read(ts.root, 'CLAUDE.md')
+  assert.match(claude, /AGENTS\.md/)
+
+  fs.rmSync(cwd, { recursive: true, force: true })
 })

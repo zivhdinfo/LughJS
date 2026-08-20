@@ -19,6 +19,7 @@ import {
 import {
   resolveOptions,
   scaffoldProject,
+  type AiChoice,
   type DatabaseChoice,
   type ScaffoldOptions,
 } from './scaffold.js'
@@ -181,6 +182,7 @@ export async function main(argv: string[]): Promise<void> {
     .option('-d, --database <database>', 'sqlite | postgres | mysql')
     .option('--auth', 'include the auth scaffold (JWT + bcrypt + users table)')
     .option('--no-auth', 'skip the auth scaffold')
+    .option('--ai <assistant>', 'instructions for AI assistants: none | claude | agents | both')
     .option('-y, --yes', 'accept defaults, do not prompt')
     .action(async (name: string | undefined, opts: Record<string, unknown>) => {
       const partial: Partial<ScaffoldOptions> = {}
@@ -193,17 +195,24 @@ export async function main(argv: string[]): Promise<void> {
       // left undefined only when neither flag was given, which is what we want
       // the prompt to distinguish.
       if (argv.includes('--auth') || argv.includes('--no-auth')) partial.auth = opts.auth as boolean
+      if (opts.ai !== undefined) {
+        partial.ai = assertChoice('ai', opts.ai as string, ['none', 'claude', 'agents', 'both']) as AiChoice
+      }
       if (opts.yes) {
         partial.name ??= 'my-app'
         partial.language ??= 'ts'
         partial.database ??= 'sqlite'
         partial.auth ??= false
+        partial.ai ??= 'none'
       }
 
       const resolved = await resolveOptions(partial, { interactive: !opts.yes })
       const result = scaffoldProject(root, resolved)
 
-      console.log(`\nCreated ${result.options.name} (${result.options.language}, ${result.options.database}${result.options.auth ? ', auth' : ''})`)
+      const summary: string[] = [result.options.language, result.options.database]
+      if (result.options.auth) summary.push('auth')
+      if (result.options.ai !== 'none') summary.push(`ai:${result.options.ai}`)
+      console.log(`\nCreated ${result.options.name} (${summary.join(', ')})`)
       for (const f of result.files) console.log(`  ${f}`)
       console.log(`\nNext:\n  cd ${result.options.name}\n  npm install\n  npm run migrate\n  npm run dev\n`)
     })
