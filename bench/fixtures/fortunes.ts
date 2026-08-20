@@ -1,7 +1,7 @@
 // GENERATED from the official TechEmpower FrameworkBenchmarks repository
 // (toolset/databases/postgres/create-postgres.sql, verbatim download).
 // Regenerate with: node scripts/generate-fortunes-fixture.mjs
-// DO NOT EDIT BY HAND — a corrupted fixture is caught by test/fortunes.test.ts.
+// DO NOT EDIT BY HAND. A corrupted fixture is caught by test/fortunes.test.ts.
 
 export type FortuneRow = readonly [id: number, message: string]
 

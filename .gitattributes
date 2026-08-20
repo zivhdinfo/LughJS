@@ -1,0 +1,17 @@
+# Line endings are normalised to LF in the index and in the working tree.
+#
+# Two tests read files byte for byte: bench/test/fortunes.test.ts hashes the
+# pinned TechEmpower download and compares the generated fixture against it.
+# Without this file, a Windows clone with core.autocrlf=true checks those out
+# with CRLF and the comparison fails for a reason that has nothing to do with
+# the data.
+* text=auto eol=lf
+
+# Pinned upstream data, hashed by SHA-256. Never let a filter touch it.
+bench/fixtures/canonical-fortunes.sql -text
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.sqlite binary

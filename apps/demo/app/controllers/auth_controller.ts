@@ -14,7 +14,7 @@ export default class AuthController {
   async login(request: LughRequest, reply: LughReply) {
     const body = request.body as { email: string; password: string }
     const user = await this.authService.verify(body.email, body.password)
-    // Claims stay minimal — an id is enough to look the user up again, and
+    // Claims stay minimal. An id is enough to look the user up again, and
     // nothing in the token needs re-issuing when the profile changes.
     const token = await reply.jwtSign({ sub: user.id })
     return { token, user }

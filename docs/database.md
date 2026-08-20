@@ -1,7 +1,7 @@
 # Database
 
 LughJS uses **Knex** as the query builder and migration runner, and
-**Objection** for models and relations. Both are ordinary dependencies — nothing
+**Objection** for models and relations. Both are ordinary dependencies, and nothing
 is wrapped, so their full APIs are available.
 
 ## Configuration
@@ -115,8 +115,8 @@ verb and a trailing `_table`: `create_posts` → `posts`,
 | `migration:status` | list each migration as completed or pending |
 
 `refresh` and `fresh` are genuinely different. `refresh` replays each
-migration's `down()`, so anything a `down()` forgot to drop — or a table created
-outside the migration history — survives. `fresh` enumerates the schema and
+migration's `down()`, so anything a `down()` forgot to drop, or a table created
+outside the migration history, survives. `fresh` enumerates the schema and
 drops it, then runs the migrations against an empty database. Use `fresh` when
 the history has drifted from reality.
 

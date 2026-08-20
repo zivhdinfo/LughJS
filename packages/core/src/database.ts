@@ -61,8 +61,8 @@ export async function resetMigrations(db: Knex, directory?: string): Promise<Mig
  * DROPS every table in the current schema, then re-runs all migrations.
  *
  * This is what distinguishes `fresh` from `refresh`: `refresh` only replays the
- * `down()` of each migration, so anything a migration forgot to drop — or a
- * table created outside the migration history — survives. `fresh` starts from a
+ * `down()` of each migration, so anything a migration forgot to drop, or a
+ * table created outside the migration history, survives. `fresh` starts from a
  * genuinely empty schema.
  */
 export async function freshMigrations(db: Knex, directory?: string): Promise<MigrationResult> {

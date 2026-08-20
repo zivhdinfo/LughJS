@@ -23,7 +23,7 @@ test('buildContainer registers values and resolves classes with CLASSIC injectio
   assert.ok(ctrl.postsService, 'controller received injected service')
 })
 
-test('services are singletons — same instance per resolve', async () => {
+test('services are singletons, same instance per resolve', async () => {
   const container = buildContainer({ db: {}, config: {}, env: {} })
   await registerFolder(container, path.join(fixture, 'services'))
   const a = container.resolve('postsService')

@@ -15,12 +15,21 @@
     "test": "npm run test --workspace @lughjs/core && npm run test --workspace lughjs-bench",
     "bench": "npm run bench --workspace lughjs-bench",
     "audit": "npm audit --omit=dev",
-    "dev": "npm run dev --workspace @lughjs/demo"
+    "dev": "npm run dev --workspace @lughjs/demo",
+    "lint:prose": "node scripts/check-prose.mjs"
   },
   "overrides": {
     "hyperid": "4.0.0"
   },
   "version": "2.0.0",
   "license": "MIT",
-  "description": "Lugh — structure for Node HTTP services"
+  "description": "Lugh: structure for Node HTTP services",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zivhdinfo/LughJS.git"
+  },
+  "homepage": "https://github.com/zivhdinfo/LughJS#readme",
+  "bugs": {
+    "url": "https://github.com/zivhdinfo/LughJS/issues"
+  }
 }

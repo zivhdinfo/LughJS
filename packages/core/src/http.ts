@@ -1,7 +1,7 @@
 /**
  * The HTTP surface Lugh hands to application code.
  *
- * Everything an app touches — request, reply, the server instance, schemas —
+ * Everything an app touches (request, reply, the server instance, schemas)
  * is named here, so a controller, a service or a guard only ever imports from
  * `@lughjs/core`. Lugh runs on a battle-tested HTTP engine underneath and these
  * are that engine's own objects, passed through untouched rather than wrapped:

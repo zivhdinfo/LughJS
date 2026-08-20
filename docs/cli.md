@@ -25,8 +25,8 @@ lugh new demo --yes                               # defaults, no prompts
 |---|---|---|
 | `-l, --language` | `ts`, `js` | `ts` |
 | `-d, --database` | `sqlite`, `postgres`, `mysql` | `sqlite` |
-| `--auth` / `--no-auth` | — | no auth |
-| `-y, --yes` | — | prompt |
+| `--auth` / `--no-auth` | n/a | no auth |
+| `-y, --yes` | n/a | prompt |
 
 Refuses to write into a non-empty directory. Generates a random `JWT_SECRET`
 into `.env` when `--auth` is used.
@@ -34,7 +34,7 @@ into `.env` when `--auth` is used.
 ## Generators
 
 The output language follows the project, detected from whether `config/app.ts`
-or `config/app.js` exists. Existing files are never overwritten — the command
+or `config/app.js` exists. Existing files are never overwritten; the command
 reports `SKIP` instead.
 
 | command | writes |
@@ -73,7 +73,7 @@ migration:status
   · 20250210120000000_add_tags.ts  (pending)
 ```
 
-`migration:fresh` is destructive on purpose — see [database.md](database.md) for
+`migration:fresh` is destructive on purpose. See [database.md](database.md) for
 how it differs from `refresh`.
 
 ## Seeders

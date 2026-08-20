@@ -9,12 +9,12 @@ npm run bench       # the measurement harness
 
 ## The suite
 
-**56 tests, all passing.** They run against real code — a real boot, a real
+**56 tests, all passing.** They run against real code: a real boot, a real
 SQLite database, real HTTP requests, a real child process for the signal test.
 Nothing important is mocked, because a mock of the boot sequence would only
 prove the mock works.
 
-### Boot and wiring — `router.test.ts`, `di.test.ts`
+### Boot and wiring: `router.test.ts`, `di.test.ts`
 
 - `createApp` boots and routes resolve through the container
 - a validated POST creates a row; an invalid body is rejected with 400
@@ -22,15 +22,15 @@ prove the mock works.
 - global middleware from `app/middleware` is applied
 - per-route middleware runs only on its route
 - the container resolves classes by constructor parameter name
-- services are singletons — the same instance on every resolve
+- services are singletons, returning the same instance on every resolve
 - a module whose default export is not a class is rejected
 
-### Failure behaviour — `hardening.test.ts`
+### Failure behaviour: `hardening.test.ts`
 
 - an invalid schema fails at **boot**, not on the first request
 - validation errors produce a 400 with a consistent JSON shape
 - an unknown route produces a 404 with a JSON body
-- **a 500 never echoes the internal error message** — the test asserts the
+- **a 500 never echoes the internal error message**. The test asserts the
   generic message in both environments, that the detail is present outside
   production, and that nothing internal appears anywhere in the production body
 - graceful shutdown drains an in-flight request, then closes the pool
@@ -38,7 +38,7 @@ prove the mock works.
 - an env value outside its declared choices fails fast
 - SIGTERM triggers graceful shutdown in a real child process
 
-### Database — `migration.test.ts`, `migration-commands.test.ts`
+### Database: `migration.test.ts`, `migration-commands.test.ts`
 
 - `migration:run` creates tables, `rollback` drops them, `fresh` re-runs them
 - `migration:status` reports completed and pending accurately
@@ -49,7 +49,7 @@ prove the mock works.
 - running seeders twice does not duplicate rows
 - `db:seed --class` runs only the named seeder
 
-### The scaffolder — `scaffold.test.ts`
+### The scaffolder: `scaffold.test.ts`
 
 - a TypeScript + SQLite project without auth
 - a JavaScript project with **no `.ts` file anywhere** and no TypeScript syntax
@@ -66,7 +66,7 @@ prove the mock works.
 That typecheck test is the one that earns its place. It caught three real
 defects in the templates that no amount of reading would have.
 
-### Regressions — `regressions.test.ts`
+### Regressions: `regressions.test.ts`
 
 Thirteen tests, one per defect found during the audit that produced 2.0.0. Each
 fails against the previous implementation:
@@ -78,7 +78,7 @@ fails against the previous implementation:
 - `Route.group` prefixes its children and restores the prefix, including when
   the callback throws
 - an unknown controller names the key it looked for
-- **`migration:fresh` drops a table no migration owns; `refresh` does not** —
+- **`migration:fresh` drops a table no migration owns; `refresh` does not**.
   the test creates an orphan table and checks each command's effect on it
 - `listTables` ignores engine-internal tables
 - a migration name keeps table words that merely contain a verb
@@ -88,10 +88,10 @@ fails against the previous implementation:
 - a name that cannot form a class is rejected up front
 - an ambiguous `--class` seeder is an error, not a coin flip
 
-### Fixture integrity — `bench/test/fortunes.test.ts`
+### Fixture integrity: `bench/test/fortunes.test.ts`
 
 The render suite's dataset is pinned and checksummed, and five tests fail if it
-drifts — including one asserting the deliberately hostile row is still there, so
+drifts, including one asserting the deliberately hostile row is still there, so
 the escaping check cannot quietly stop testing anything.
 
 ## End-to-end verification
@@ -115,7 +115,7 @@ against a live server for 2.0.0:
 
 ### What it measures
 
-Four suites against a real application — booted through `createApp`, with the
+Four suites against a real application, booted through `createApp`, with the
 container, the controllers and the database in the path:
 
 | suite | what it exercises |
@@ -129,7 +129,7 @@ Then the same application again with security headers, CORS, rate limiting and
 token verification switched on, so the report separates the cost of the
 middleware from the cost of the work.
 
-Startup time and resident memory — idle and under load — are recorded from the
+Startup time and resident memory, idle and under load, are recorded from the
 server's own process.
 
 ### How it protects itself
@@ -139,7 +139,7 @@ to distrust its own output:
 
 - **The server runs in its own process.** A load generator sharing an event loop
   with the server measures the two of them fighting.
-- **Every endpoint is verified before it is timed** — status, content type and
+- **Every endpoint is verified before it is timed**: status, content type and
   body. The render suite asserts the hostile row comes back escaped and the
   request-time row is present.
 - **A single non-2xx during a measured run fails the whole benchmark.** This is
@@ -157,7 +157,7 @@ to distrust its own output:
 
 ### What the last run measured
 
-Recorded on an i5-10400F (12 threads), 32 GB, Windows 11, Node 24.18 — 5 rounds
+Recorded on an i5-10400F (12 threads), 32 GB, Windows 11, Node 24.18, over 5 rounds
 of 10s at 64 concurrent connections, median reported. Every suite returned the
 expected status, content type and body on every measured run.
 
@@ -170,8 +170,8 @@ expected status, content type and body on every measured run.
 
 Cold start 953 ms; resident memory 105 MB idle, 302 MB under load.
 
-The hardened profile — security headers, CORS, rate limiting, token
-verification — costs between a fifth and nearly half of throughput:
+The hardened profile (security headers, CORS, rate limiting, token
+verification) costs between a fifth and nearly half of throughput:
 
 | suite | plain | hardened | cost |
 |---|---|---|---|
@@ -182,7 +182,7 @@ verification — costs between a fifth and nearly half of throughput:
 
 `json` pays the most because it is the only suite with no I/O to hide the
 middleware behind: the fixed per-request cost is the whole cost. On the three
-suites that touch the database, the same middleware is a fifth to a quarter —
+suites that touch the database, the same middleware is a fifth to a quarter,
 which is the honest way to read that first number too.
 
 The spread across rounds stayed between ±0.9% and ±3.8%, so a change worth
@@ -191,7 +191,7 @@ acting on has to be larger than that before it means anything.
 ### Reading the numbers
 
 They come from a desktop that was also running other software. Treat them as a
-baseline for **that machine** — good for catching a regression between two runs,
+baseline for **that machine**: good for catching a regression between two runs,
 not for quoting as the throughput of a tuned deployment. Two runs on the same
 machine are comparable; a number from this file and a number from somewhere else
 are not.

@@ -30,7 +30,7 @@ only reads `message` can never surface internals by accident. `NODE_ENV` decides
 whether `error` and `stack` are attached; the real error is always logged
 server-side at `error` level.
 
-A deliberate 4xx keeps its message — that is the point of throwing one:
+A deliberate 4xx keeps its message. That is the point of throwing one:
 
 ```ts
 export class AuthError extends Error {
@@ -90,7 +90,7 @@ export async function auth(request: LughRequest, reply: LughReply) {
 }
 ```
 
-A guard that sends a reply **without returning it** does not stop the request —
+A guard that sends a reply **without returning it** does not stop the request:
 the route handler still runs, against a reply that has already been sent. The
 `return` is the whole mechanism.
 
@@ -132,7 +132,7 @@ exhaust it for everyone. Set `trustProxy`:
 export default { server: { trustProxy: true } }
 ```
 
-Only turn it on when a proxy you control really is in front of the app —
+Only turn it on when a proxy you control really is in front of the app,
 otherwise a client can forge `X-Forwarded-For` and evade the limit instead.
 
 ## What the framework does not do for you

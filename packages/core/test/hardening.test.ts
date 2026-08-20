@@ -25,7 +25,7 @@ test('an invalid schema fails at BOOT, not on the first request', async (t) => {
   await assert.rejects(
     () => createApp(dir),
     /schema|required|body|must/i,
-    'boot must fail when a schema is invalid — validation is compiled ahead of time',
+    'boot must fail when a schema is invalid, because validation is compiled ahead of time',
   )
 })
 
@@ -60,7 +60,7 @@ test('an unknown route produces a 404 with a JSON body', async (t) => {
 
 test('a 500 never echoes the internal error message', async (t) => {
   // Outside production the detail is available for debugging, but it lives in
-  // `error`/`stack` — `message` is generic in EVERY environment so that a
+  // `error`/`stack`, and `message` is generic in EVERY environment so that a
   // handler which forwards only `message` can never leak SQL or stored values.
   const dev = await createApp(appRoot)
   const devBody = (await dev.server.inject({ method: 'GET', url: '/boom' })).json()
@@ -93,7 +93,7 @@ test('graceful shutdown drains in-flight requests and closes the DB pool', async
     await db.destroy().catch(() => undefined)
   })
 
-  // /slow takes 500ms — a REAL HTTP request, so the drain phase must wait for it.
+  // /slow takes 500ms, and it is a REAL HTTP request, so the drain must wait for it.
   const request = new Promise<void>((resolve, reject) => {
     const req = http.get(`http://127.0.0.1:${port}/slow`, (res) => {
       res.resume()
@@ -177,7 +177,7 @@ test('SIGTERM triggers graceful shutdown in a real process', async () => {
 
   if (process.platform === 'win32') {
     // Windows: node children have no real SIGTERM delivery; the signal-server
-    // also listens for a stdin "shutdown" line — send that instead.
+    // also listens for a stdin "shutdown" line, so send that instead.
     child.stdin?.write('shutdown\n')
   } else {
     child.kill('SIGTERM')

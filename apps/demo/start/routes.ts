@@ -6,7 +6,7 @@ const postBody = {
   required: ['title', 'body'],
   additionalProperties: false,
   properties: {
-    // `user_id` is deliberately NOT accepted from the client — the author is
+    // `user_id` is deliberately NOT accepted from the client. The author is
     // taken from the authenticated token, so nobody can post as someone else.
     title: { type: 'string', minLength: 1, maxLength: 255 },
     body: { type: 'string', minLength: 1 },

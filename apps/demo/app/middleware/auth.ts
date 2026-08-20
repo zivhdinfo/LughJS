@@ -7,7 +7,7 @@ import type { LughReply, LughRequest } from '@lughjs/core'
  * treating it as global middleware.
  *
  * The `return` in front of `reply.send` matters: a guard that sends a reply
- * without returning it does not stop the request — the route handler still
+ * without returning it does not stop the request: the route handler still
  * runs, against a reply that has already been sent.
  */
 export async function auth(request: LughRequest, reply: LughReply): Promise<void> {

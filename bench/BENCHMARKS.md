@@ -12,7 +12,7 @@ Generated 2026-08-20T00:39:18.883Z by `npm run bench`.
 | node | v24.18.0 |
 
 > Taken on a desktop that was also running other software. Treat these as a
-> baseline for **this machine** — useful for spotting a regression between two
+> baseline for **this machine**: useful for spotting a regression between two
 > runs, not for quoting as the throughput of a tuned deployment.
 
 ## Method
@@ -45,10 +45,10 @@ Median of 5 rounds, 64 concurrent connections.
 
 Every individual sample, so the spread is not hidden behind a median:
 
-- `json` — 29602, 30329, 29412, 29195, 30194 req/s
-- `query` — 10149, 10247, 10242, 10175, 10373 req/s
-- `render` — 9243, 9189, 8984, 9179, 9163 req/s
-- `write` — 6655, 6700, 6713, 6665, 6714 req/s
+- `json`: 29602, 30329, 29412, 29195, 30194 req/s
+- `query`: 10149, 10247, 10242, 10175, 10373 req/s
+- `render`: 9243, 9189, 8984, 9179, 9163 req/s
+- `write`: 6655, 6700, 6713, 6665, 6714 req/s
 
 ## Startup and memory
 
@@ -59,7 +59,7 @@ Every individual sample, so the spread is not hidden behind a median:
 | resident memory, under load | 302 MB |
 
 Cold start includes reading the config, opening the pool, constructing every
-service and controller, compiling the schemas and installing the routes — the
+service and controller, compiling the schemas and installing the routes. That is the
 whole of the boot sequence, once.
 
 ## What the hardened profile costs

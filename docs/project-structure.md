@@ -3,19 +3,19 @@
 ```
 my-app
 ├── app
-│   ├── controllers   HTTP entry points — receive the request and reply directly
+│   ├── controllers   HTTP entry points, given the request and reply directly
 │   ├── services      business logic; injected into controllers by parameter name
 │   ├── models        Objection models (tableName, relationMappings)
 │   └── middleware    global hooks, auto-registered at boot in file-name order
 ├── config
-│   ├── env.ts        envalid specs — validated at boot, fails fast
+│   ├── env.ts        envalid specs, validated at boot, fails fast
 │   ├── app.ts        app name, logger, low-level server options
 │   └── database.ts   Knex config (any dialect)
 ├── database
 │   ├── migrations    up() / down()
 │   └── seeders       seed()
 ├── start
-│   ├── routes.ts     the route table — a default-exported function
+│   ├── routes.ts     the route table, a default-exported function
 │   └── server.ts     entry point: createApp() → listen
 └── .env              never committed; .env.example is the template
 ```
@@ -106,18 +106,18 @@ export default async function security(server: LughServer) {
 per-route guards, which `start/routes` imports and attaches explicitly:
 
 ```ts
-// app/middleware/auth.ts — no default export
+// app/middleware/auth.ts, no default export
 export async function auth(request: LughRequest, reply: LughReply) { … }
 ```
 
 Files are loaded in sorted order, which is why the scaffolder writes
-`005_security.ts`, `010_schemas.ts`, `020_request_logger.ts` — the numeric
+`005_security.ts`, `010_schemas.ts`, `020_request_logger.ts`. The numeric
 prefix is the ordering mechanism.
 
 ## Repository layout (this monorepo)
 
 ```
-packages/core   @lughjs/core — framework + CLI
+packages/core   @lughjs/core, the framework and the CLI
 apps/demo       reference app, a real consumer of the package
 bench           the measurement harness
 docs            this documentation

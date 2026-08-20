@@ -3,14 +3,14 @@
  *
  * The point is not a league table. It is to know, for this codebase, what each
  * kind of request costs, how much of that cost is the hardened middleware, and
- * whether a change made things slower — with numbers you can trust because the
+ * whether a change made things slower, with numbers you can trust because the
  * method refuses to report anything it has not verified.
  *
  * Method:
  *  - the server runs in its OWN process, so the load generator never competes
  *    with it for the same event loop
  *  - a discarded warmup after every boot, so the JIT and the pool are settled
- *  - N samples per cell, and the MEDIAN is reported — never the best run, which
+ *  - N samples per cell, and the MEDIAN is reported, never the best run, which
  *    would systematically flatter every number
  *  - every sample is printed, so the spread is visible instead of summarised
  *  - each endpoint is verified for status, content-type and body BEFORE it is
@@ -123,7 +123,7 @@ function killTree(pid: number | undefined): void {
   }
 }
 
-/** Resident memory of the SERVER process — never of this one. */
+/** Resident memory of the SERVER process, never of this one. */
 function rssMB(pid: number | undefined): number {
   if (!pid) return 0
   try {
@@ -251,7 +251,7 @@ async function runPass(hardened: boolean): Promise<PassResult> {
         if (s.non2xx > 0 || s.errors > 0) {
           problems.push(
             `${suite.name} (${hardened ? 'hardened' : 'plain'}): ${s.non2xx} non-2xx and ${s.errors} errors during a ` +
-              `measured run — these numbers do not describe successful work`,
+              `measured run, so these numbers do not describe successful work`,
           )
         }
         ;(samples[suite.name] ??= []).push(s)
@@ -320,7 +320,7 @@ ${SUITES.filter((s) => plain.cells[s.name])
 Every individual sample, so the spread is not hidden behind a median:
 
 ${SUITES.filter((s) => plain.cells[s.name])
-  .map((s) => `- \`${s.name}\` — ${(plain.cells[s.name] as Cell).runs.join(', ')} req/s`)
+  .map((s) => `- \`${s.name}\` : ${(plain.cells[s.name] as Cell).runs.join(', ')} req/s`)
   .join('\n')}
 
 ## Startup and memory
@@ -332,7 +332,7 @@ ${SUITES.filter((s) => plain.cells[s.name])
 | resident memory, under load | ${plain.loadedRssMB.toFixed(0)} MB |
 
 Cold start includes reading the config, opening the pool, constructing every
-service and controller, compiling the schemas and installing the routes — the
+service and controller, compiling the schemas and installing the routes. That is the
 whole of the boot sequence, once.
 
 ## What the hardened profile costs
@@ -370,7 +370,7 @@ Generated ${machine.date} by \`npm run bench\`.
 | node | ${machine.node} |
 
 > Taken on a desktop that was also running other software. Treat these as a
-> baseline for **this machine** — useful for spotting a regression between two
+> baseline for **this machine**: useful for spotting a regression between two
 > runs, not for quoting as the throughput of a tuned deployment.
 
 ## Method

@@ -140,7 +140,7 @@ test('migration:fresh drops tables no migration owns; refresh does not', async (
   await withSqlite(async (db, migrations) => {
     const applied = await runMigrations(db, migrations)
     assert.deepEqual(applied[1], ['001_owned.ts'], 'the fixture migration must actually run')
-    // A table created outside the migration history — exactly what `fresh` is
+    // A table created outside the migration history, which is exactly what `fresh` is
     // supposed to clear and `refresh` is not.
     await db.schema.createTable('orphan', (t) => t.increments('id'))
 
@@ -168,7 +168,7 @@ test('listTables ignores sqlite internal tables', async () => {
 // ── generators ───────────────────────────────────────────────────────────────
 
 test('a migration name keeps table words that merely contain a verb', () => {
-  // `create_addresses` used to become `resses` — the verb regex was global.
+  // `create_addresses` used to become `resses`, because the verb regex was global.
   assert.equal(tableFromMigrationName('create_addresses'), 'addresses')
   assert.equal(tableFromMigrationName('create_posts'), 'posts')
   assert.equal(tableFromMigrationName('add_password_hash_to_users'), 'password_hash_to_users')

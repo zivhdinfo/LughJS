@@ -32,7 +32,7 @@ export const PROFILE = {
   /**
    * Rate limiting is part of the hardened profile, but a limit the load can
    * actually reach turns the whole exercise into a measurement of how fast
-   * rejections are produced — and a rejection is cheaper than real work, so
+   * rejections are produced, and a rejection is cheaper than real work, so
    * throughput would go UP while the server stopped doing anything useful.
    * The ceiling is set out of reach, and the runner additionally fails the run
    * if a single non-2xx appears.

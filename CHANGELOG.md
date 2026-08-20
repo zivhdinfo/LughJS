@@ -1,5 +1,62 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed: distribution
+
+- **`@lughjs/core` is published as compiled JavaScript.** The package pointed
+  `main`, `types` and `exports` at `src/index.ts`. Node refuses to strip types
+  from anything under `node_modules`, so `import '@lughjs/core'` failed with
+  `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` unless the process happened to
+  have a TypeScript loader registered. The build already existed and was simply
+  never referenced. The tarball now ships `dist/` with declarations and
+  standalone source maps; inside this repository the `lugh-dev` export condition
+  still resolves to `src/`, so the test suite runs against the sources.
+- **The CLI shim imports the CLI through the package exports** instead of a
+  relative path, so it cannot end up holding a second copy of the module-global
+  `Route` registrar while the project holds the first. That combination reported
+  an empty table from `list:routes`.
+- **`lugh --version` reads the version from `package.json`** rather than a
+  literal that had to be kept in step by hand.
+
+### Fixed: security
+
+- **Generated services no longer mass-assign.** `lugh make:service` emitted
+  `Model.query().insert(input)` with a comment warning against exactly that. It
+  now emits a `FILLABLE` allow-list and a `pick()` helper, and both `create` and
+  `update` go through it.
+- **The reference application checks ownership on writes.** `PUT`, `PATCH` and
+  `DELETE` on `/api/posts/:id` were guarded by `auth` and nothing else, so any
+  authenticated user could edit or delete any post. Both statements are now
+  scoped by `user_id`, which also closes the check-then-write race, and the
+  controller distinguishes 404 from 403.
+
+### Fixed: correctness
+
+- **The benchmark fixture test no longer depends on checkout line endings.** A
+  Windows clone with `core.autocrlf=true` failed a comparison that had nothing
+  to do with the data. `.gitattributes` now pins LF, marks the hashed upstream
+  SQL as untouchable, and the test normalises newlines before comparing.
+
+### Changed
+
+- **The reference application logs on `onResponse`, not `onRequest`.** The
+  server's own logger already writes an "incoming request" line; the hook was
+  duplicating it and adding nothing. It now records the status code, which is
+  the part that was missing.
+- **Documentation, comments and CLI output no longer use the em dash.**
+  `npm run lint:prose` enforces this and CI runs it. The two rows of the pinned
+  TechEmpower fixture that contain one are exempt, because they are verbatim
+  upstream data.
+- **README rewritten** in the shape the ecosystem expects: badges, install,
+  features, a runnable example, then the documentation table.
+
+### Added
+
+- `SECURITY.md`, `CONTRIBUTING.md`, `packages/core/README.md`, `.gitattributes`,
+  and `repository`/`homepage`/`bugs` metadata on both manifests.
+- `npm run lint:prose`, wired into CI along with an explicit build step.
+
 ## [2.0.0]
 
 The first release under the Lugh name. Versioning starts here. The package is
@@ -11,7 +68,7 @@ could be pinned down has a regression test that fails against the old code.
 
 ### Added
 
-**`lugh new` — a project scaffolder.** Four questions, asked interactively or
+**`lugh new`, a project scaffolder.** Four questions, asked interactively or
 passed as flags: **project name**, **language** (TypeScript or JavaScript),
 **database** (SQLite, PostgreSQL, MySQL) and whether to include the **auth
 scaffold**. It writes a project that migrates, seeds and serves immediately,
@@ -24,7 +81,7 @@ project is JavaScript, and `createApp` resolves `config/*` and `start/routes` as
 anywhere and needs no build step.
 
 **A Lugh-named HTTP surface.** `LughRequest`, `LughReply`, `LughServer`,
-`LughSchema`, `Handler`, `Middleware` — application code imports from
+`LughSchema`, `Handler`, `Middleware`. Application code imports from
 `@lughjs/core` and nothing else.
 
 **`Route.group(prefix, fn)`.** Nesting route groups; the previous prefix is
@@ -33,17 +90,17 @@ restored afterwards even if the callback throws.
 **`migration:fresh` actually drops the schema.** It enumerates the tables and
 drops them, per database engine, then re-runs the migrations. It used to be an
 alias for `migration:refresh`, which meant it could not recover a database whose
-real shape had drifted from its migration history — the one situation it exists
+real shape had drifted from its migration history, which is the one situation it exists
 for. `listTables()` and `dropAllTables()` are exported.
 
-**`config.server`** — low-level server options, which is where `trustProxy`
+**`config.server`**: low-level server options, which is where `trustProxy`
 goes.
 
-**`docs/`** — usage documentation covering the layout, routing, the container,
+**`docs/`**: usage documentation covering the layout, routing, the container,
 the database layer, configuration, security, the CLI, the design decisions, and
 the test and measurement method.
 
-### Fixed — security
+### Fixed: security
 
 - **A 5xx no longer echoes the internal error message.** `message` is
   `Internal Server Error` in every environment; detail moved to separate
@@ -52,7 +109,7 @@ the test and measurement method.
   previous behaviour answered anonymous requests with schema names and stored
   data.
 - **`password_hash` cannot reach a client.** Routes returning user records
-  declare a `response` schema — an allow-list enforced by the serializer — and
+  declare a `response` schema, an allow-list enforced by the serializer, and
   the services project explicit columns so the hash is never fetched at all.
 - **`JWT_SECRET` has no default.** A missing secret stops the boot instead of
   falling back to a shared literal. `.env` is no longer committed.
@@ -63,11 +120,11 @@ the test and measurement method.
   from the verified token rather than the request body.
 - **CORS uses an explicit origin list** instead of reflecting whatever the
   caller sent.
-- **Login does not reveal which addresses are registered** — a dummy comparison
+- **Login does not reveal which addresses are registered**, using a dummy comparison
   keeps the timing and the message identical for an unknown email.
 - Password hashing cost raised from 10 to 12.
 
-### Fixed — correctness
+### Fixed: correctness
 
 - **`start/routes` must default-export a function.** The old module unwrapped
   the default export twice, so the documented callback form was never invoked at
@@ -85,7 +142,7 @@ the test and measurement method.
   `addresses` and not `resses`.
 - **Migration timestamps carry milliseconds**, so two files created in the same
   second still order deterministically.
-- **`pluralize` does not double-pluralise** — `posts` stays `posts`.
+- **`pluralize` does not double-pluralise**, so `posts` stays `posts`.
 - **Generated names are validated**, and model `tableName` is pluralised and
   carries `override`.
 - **`migrationStatus` uses the configured migrations table**, tolerates it not
@@ -104,7 +161,7 @@ the test and measurement method.
 - **The CLI exits non-zero on failure**, and prints a stack with `LUGH_DEBUG=1`.
 - The duplicated `toCamelCase` implementation is gone; there is one.
 
-### Fixed — the measurement harness
+### Fixed: the measurement harness
 
 The previous harness could not support the numbers it published.
 
@@ -135,4 +192,4 @@ The previous harness could not support the numbers it published.
   from the repository.
 - `app/middleware` has a stated contract: a default-exported function is global
   middleware, a module without one is left alone for per-route guards, and files
-  load in sorted order — hence the `005_`/`010_`/`020_` prefixes.
+  load in sorted order, hence the `005_`/`010_`/`020_` prefixes.

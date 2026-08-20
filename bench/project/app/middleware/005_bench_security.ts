@@ -11,7 +11,7 @@ import { PROFILE } from '../../../profile.js'
  * the same application twice and report what this set costs.
  *
  * These are ecosystem plugins that deliberately publish their decorators onto
- * the root instance, so `register` is the right entry point for them —
+ * the root instance, so `register` is the right entry point for them.
  * unlike a plain hook module, which Lugh invokes directly.
  */
 export async function registerBenchSecurity(server: LughServer): Promise<void> {

@@ -6,7 +6,7 @@ alternative, and the reason the alternative lost.
 ## Everything expensive happens at boot
 
 Reading config, opening the pool, constructing services, compiling schemas,
-binding controller methods — all of it runs once, in `createApp`, in a fixed
+binding controller methods. All of it runs once, in `createApp`, in a fixed
 order. What is left for a request is your handler.
 
 This is why `'PostController.index'` is a string in your source but a plain
@@ -24,7 +24,7 @@ A controller receives the request and reply directly. Lugh does not build a
 context object, does not copy properties onto a facade, and does not narrow what
 you can reach.
 
-The alternative — a `ctx` per request — reads nicely in a tutorial and costs an
+The alternative, a `ctx` per request, reads nicely in a tutorial and costs an
 allocation on every call, forever. Worse, it decides in advance which
 capabilities you are allowed: the day you need to stream a response or take over
 the socket, you are fighting the abstraction that was supposed to help.
@@ -44,7 +44,7 @@ during construction. Parameter matching costs nothing at runtime and is why
 generators and no build step.
 
 The price is real and worth stating: **a parameter name is load-bearing.**
-Rename it and resolution breaks — the type annotation is not what is matched.
+Rename it and resolution breaks: the type annotation is not what is matched.
 Lugh compensates by failing loudly: an unregistered key names the key it looked
 for, two files claiming one key is a boot error, and a file that would shadow
 `db`, `config` or `env` is refused.
@@ -52,11 +52,11 @@ for, two files claiming one key is a boot error, and a file that would shadow
 ## Routes are declared inside a function
 
 `start/routes` default-exports a function. It would be prettier to call
-`Route.get(...)` at the top of the module — and that is exactly what an earlier
+`Route.get(...)` at the top of the module, and that is exactly what an earlier
 version did.
 
 It does not work. A module body is evaluated once per process, so the second
-boot in one process — a test, a benchmark, a reload — would find the registrar
+boot in one process (a test, a benchmark, a reload) would find the registrar
 reset and the module cached, and register nothing at all. Silently. The earlier
 version papered over this by appending a changing query string to every import,
 which meant the module map grew forever and two boots inside the same
@@ -76,7 +76,7 @@ answers an anonymous request with your table names, your column names, your
 constraints and a row of real data. The rule is absolute so that no handler,
 logger or client that reads only `message` can ever leak internals by accident.
 
-A deliberate 4xx keeps its message — that is the entire point of throwing one.
+A deliberate 4xx keeps its message. That is the entire point of throwing one.
 
 ## Response schemas are an allow-list
 
@@ -94,7 +94,7 @@ enumerates the schema and drops it.
 
 They used to be the same function, which made `fresh` useless for the one
 situation it exists for: a database whose real shape has drifted from its
-migration history — a table a `down()` forgot, a table created by hand. `fresh`
+migration history: a table a `down()` forgot, a table created by hand. `fresh`
 now starts from an empty schema, is implemented per database engine, and refuses
 an engine it does not know rather than half-dropping your data.
 
@@ -104,7 +104,7 @@ an engine it does not know rather than half-dropping your data.
 during boot, naming every variable that failed.
 
 Secrets are declared with **no default**, deliberately. A default on a secret is
-the exact mechanism by which a placeholder ends up signing production tokens —
+the exact mechanism by which a placeholder ends up signing production tokens.
 the app works, so nobody looks. Without a default the failure happens at boot,
 on the machine that is misconfigured.
 
@@ -123,18 +123,30 @@ That second case is the convention for per-route guards like `auth.ts`, which
 is an error, because it is always a mistake.
 
 Files load in sorted order, which is why the generated ones are numbered
-`005_`, `010_`, `020_`. The number *is* the ordering mechanism — schemas must be
+`005_`, `010_`, `020_`. The number *is* the ordering mechanism: schemas must be
 registered before the routes that reference them.
 
-## TypeScript runs without a build step
+## Your project runs without a build step
 
-The CLI registers a loader, so `.ts` config, migrations and routes run directly.
+The CLI registers a loader before it imports anything from your project, so
+`.ts` config, migrations, routes, controllers and services run directly. There
+is no build pipeline to configure, no `dist/` to keep in sync, and no class of
+bug where the source and the running code disagree. `--language=js` skips the
+transform entirely.
 
-The cost is roughly half a second of extra cold start and a runtime dependency
-that a stricter project might want to remove. In exchange there is no build
-pipeline to configure, no `dist/` to keep in sync, and no class of bug where the
-source and the running code disagree. `--language=js` skips the transform
-entirely.
+The framework itself is the exception, and deliberately so. `@lughjs/core` is
+published as compiled JavaScript with type declarations beside it. Node refuses
+to strip types from anything inside `node_modules`, so a package that shipped
+`.ts` could only ever be loaded through a loader: `node your-server.js` would
+fail, and so would any test runner, bundler or deployment that did not opt in.
+Shipping the build removes that constraint and takes the transform of the
+framework's own several thousand lines off every cold start.
+
+The loader stays a runtime dependency because your project still needs it.
+
+Inside this repository the package resolves to `src/` instead, under the
+`lugh-dev` export condition, so the test suite runs against the sources rather
+than against a build that may be a rebuild behind them.
 
 ## Deliberately absent
 

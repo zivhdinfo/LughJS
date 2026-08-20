@@ -20,6 +20,11 @@ jobs:
 
       - run: npm ci
 
+      # `npm ci` already builds core through its prepare script; this makes the
+      # dependency explicit so a failure here is not blamed on the typecheck.
+      - name: Build core
+        run: npm run build --workspace @lughjs/core
+
       - name: Typecheck core
         run: npm run typecheck --workspace @lughjs/core
 
@@ -31,6 +36,9 @@ jobs:
 
       - name: Tests
         run: npm test
+
+      - name: Prose style
+        run: npm run lint:prose
 
       - name: npm audit (runtime deps)
         run: npm audit --omit=dev

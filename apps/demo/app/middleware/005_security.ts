@@ -9,7 +9,7 @@ import jwt from '@fastify/jwt'
  *
  * These are ecosystem plugins that deliberately publish their decorators onto
  * the root instance, so `register` is the right entry point for them. A plain
- * hook module in this folder must NOT use `register` — Lugh invokes those
+ * hook module in this folder must NOT use `register`, because Lugh invokes those
  * directly precisely so their hooks reach every route instead of being scoped
  * to a child context.
  */

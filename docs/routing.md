@@ -12,7 +12,7 @@ export default function routes() {
 
 **Why a function.** ES modules evaluate once per process. Top-level
 `Route.get(...)` calls therefore run only on the first import, so a second boot
-in the same process — a test, a benchmark, a reload — would register nothing.
+in the same process (a test, a benchmark, a reload) would register nothing.
 `createApp` throws if the file does not default-export a function.
 
 ## Methods
@@ -84,7 +84,7 @@ Route.resource('/posts', 'PostController', { only: ['index', 'show'] })
 
 ## Schemas
 
-`.schema()` takes a JSON Schema. It is compiled once, while the app boots — a
+`.schema()` takes a JSON Schema. It is compiled once, while the app boots, so a
 request never pays for parsing or interpreting it.
 
 ```ts
@@ -120,7 +120,7 @@ It is worth doing for two separate reasons:
 1. **Speed.** A declared response shape is compiled into a purpose-built
    serializer. Without one the reply falls back to generic stringification.
 2. **Safety.** That serializer emits *only* the listed properties. A column such
-   as `password_hash` cannot reach a client even if a query selects it — which
+   as `password_hash` cannot reach a client even if a query selects it, which
    is a guarantee no amount of care in the service layer gives you.
 
 Register shared schemas from a middleware file so they exist before the routes

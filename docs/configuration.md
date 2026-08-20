@@ -2,7 +2,7 @@
 
 Three files in `config/`, all plain modules with a default export.
 
-## `config/env.ts` — the environment contract
+## `config/env.ts`: the environment contract
 
 envalid specs. They are validated at boot, against `process.env` after `.env`
 has been loaded.
@@ -42,10 +42,10 @@ silently working.
 `NODE_ENV` is always validated even if your specs omit it, because the framework
 reads it to decide how much detail an error response carries.
 
-The result is a plain object, not envalid's strict proxy — reading an undeclared
+The result is a plain object, not envalid's strict proxy, so reading an undeclared
 key gives `undefined` rather than throwing.
 
-## `config/app.ts` — the app and the server
+## `config/app.ts`: the app and the server
 
 ```ts
 export default {
@@ -65,13 +65,13 @@ export default {
 | `server` | low-level server options: `trustProxy`, `bodyLimit`, `http2`, … |
 
 `logger` defaults to `true`, which means the logger writes a line per request. That is
-the right default for development and a real cost under load — turn it off when
+the right default for development and a real cost under load, so turn it off when
 you are measuring throughput, and consider a level rather than a boolean in
 production.
 
 `server` is a straight pass-through, which is where `trustProxy` goes. You need
 it whenever the app sits behind a proxy and something downstream cares about the
-client IP — rate limiting, most obviously, which otherwise sees every request as
+client IP. Rate limiting is the obvious one: it otherwise sees every request as
 coming from the proxy.
 
 Anything else you put in this file is available through the container:
@@ -83,7 +83,7 @@ export default class ReportService {
 }
 ```
 
-## `config/database.ts` — the connection
+## `config/database.ts`: the connection
 
 See [database.md](database.md).
 

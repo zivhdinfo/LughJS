@@ -84,6 +84,10 @@ test('the fixture is stable against accidental regeneration', () => {
   const sql = fs.readFileSync(canonicalSqlPath, 'utf8')
   const rows = parseCanonicalRows(sql)
   const expectedLines = rows.map((r) => `  [${r[0]}, ${JSON.stringify(r[1])}],`).join('\n')
-  const fixture = fs.readFileSync(path.join(here, '..', 'fixtures', 'fortunes.ts'), 'utf8')
+  // Normalised newlines: .gitattributes pins LF, but a checkout that ignored
+  // it would otherwise fail here for a reason unrelated to the data.
+  const fixture = fs
+    .readFileSync(path.join(here, '..', 'fixtures', 'fortunes.ts'), 'utf8')
+    .replace(/\r\n/g, '\n')
   assert.ok(fixture.includes(expectedLines), 'fortunes.ts does not match generator output for the canonical SQL')
 })

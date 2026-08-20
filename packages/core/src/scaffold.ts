@@ -25,7 +25,7 @@ const DB_DRIVER: Record<DatabaseChoice, { pkg: string; version: string; client: 
 export function assertValidProjectName(name: string): void {
   if (!name || !/^[a-z0-9][a-z0-9._-]*$/i.test(name)) {
     throw new Error(
-      `[lugh] "${name}" is not a valid project name — use letters, digits, dots, dashes or underscores, starting with a letter or digit`,
+      `[lugh] "${name}" is not a valid project name: use letters, digits, dots, dashes or underscores, starting with a letter or digit`,
     )
   }
 }
@@ -54,7 +54,7 @@ async function ask<T extends string>(
   if (byIndex) return byIndex.value
   const byValue = choices.find((c) => c.value === answer.toLowerCase())
   if (byValue) return byValue.value
-  console.log(`  (unrecognised "${answer}" — using ${fallback})`)
+  console.log(`  (unrecognised "${answer}", using ${fallback})`)
   return fallback
 }
 
@@ -498,7 +498,7 @@ function securityMiddleware(o: ScaffoldOptions): string {
   return `${imports}/**
  * These are ecosystem plugins that deliberately publish their decorators onto
  * the root instance, so \`register\` is the right entry point for them. A plain
- * hook module in this folder must NOT use \`register\` — Lugh invokes those
+ * hook module in this folder must NOT use \`register\`, because Lugh invokes those
  * directly, precisely so their hooks reach every route.
  */
 export default async function security${sig} {
@@ -536,7 +536,7 @@ function authMiddleware(o: ScaffoldOptions): string {
  * Per-route auth guard: \`Route.get('/x', 'C.a').middleware(auth)\`.
  *
  * The \`return\` after \`reply.send\` matters. An onRequest hook that sends a
- * reply without returning it does not stop the request — the route handler
+ * reply without returning it does not stop the request: the route handler
  * still runs, against a reply that has already been sent.
  */
 export async function auth${sig} {
@@ -686,7 +686,7 @@ ${ctor}
     return Post.query().findById(id)
   }
 
-  // Only the two columns a client is allowed to set are read off the input —
+  // Only the two columns a client is allowed to set are read off the input.
   // passing \`request.body\` straight to insert() is mass assignment.
   create(input${t(': PostInput')}) {
     return Post.query().insert({ title: input.title, body: input.body })
@@ -807,7 +807,7 @@ function seeder(lang: Language): string {
 
 function readme(o: ScaffoldOptions): string {
   const dbSetup: Record<DatabaseChoice, string> = {
-    sqlite: 'No setup needed — the SQLite file is created on first migration.',
+    sqlite: 'No setup needed. The SQLite file is created on first migration.',
     postgres: 'Create the database named in `DB_NAME` and set `DB_USER`/`DB_PASSWORD` in `.env`.',
     mysql: 'Create the schema named in `DB_NAME` and set `DB_USER`/`DB_PASSWORD` in `.env`.',
   }
@@ -883,7 +883,7 @@ curl -X POST localhost:3000/api/auth/login -H 'content-type: application/json' \
 curl localhost:3000/api/auth/me -H "authorization: Bearer <token>"
 \`\`\`
 
-\`JWT_SECRET\` has no default — the app refuses to boot without one.
+\`JWT_SECRET\` has no default, so the app refuses to boot without one.
 `
     : ''
 }`

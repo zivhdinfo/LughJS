@@ -17,7 +17,7 @@ export interface ContainerDeps {
  *
  * CLASSIC injection mode: constructor parameter names are matched against
  * registration keys (`constructor(private readonly postService: PostService)`),
- * so injection needs no decorators and no metadata reflection — which is
+ * so injection needs no decorators and no metadata reflection, which is
  * what lets a JavaScript project use the container exactly as a TypeScript one
  * does.
  */

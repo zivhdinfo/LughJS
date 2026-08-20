@@ -47,7 +47,7 @@ export async function gracefulShutdown(
   const closed = await withDeadline(server.close(), timeoutMs)
   if (closed === 'timedOut') {
     clean = false
-    log(`drain exceeded ${timeoutMs}ms — abandoning in-flight requests`)
+    log(`drain exceeded ${timeoutMs}ms, abandoning in-flight requests`)
   }
   const drainedMs = Date.now() - startedAt
 
@@ -67,7 +67,7 @@ export async function gracefulShutdown(
  * Installs SIGINT/SIGTERM handlers that shut down and then exit.
  *
  * Exits 0 only on a clean shutdown; a timeout exits 1, so an orchestrator can
- * tell a graceful stop from an abandoned one. A second signal exits at once —
+ * tell a graceful stop from an abandoned one. A second signal exits at once:
  * if someone presses Ctrl+C twice they mean it.
  */
 export function installShutdownHandlers(server: LughServer, db: Knex, opts: ShutdownOptions = {}): void {

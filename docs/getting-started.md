@@ -2,7 +2,7 @@
 
 ## Requirements
 
-Node.js 22 or newer. TypeScript is optional — `lugh new --language=js` produces
+Node.js 22 or newer. TypeScript is optional: `lugh new --language=js` produces
 a project with no TypeScript anywhere.
 
 ## Create a project
@@ -43,8 +43,8 @@ lugh new demo --yes            # all defaults, no prompts
 | `<name>` | a valid npm package name | `my-app` |
 | `--language`, `-l` | `ts`, `js` | `ts` |
 | `--database`, `-d` | `sqlite`, `postgres`, `mysql` | `sqlite` |
-| `--auth` / `--no-auth` | — | no auth |
-| `--yes`, `-y` | — | prompt |
+| `--auth` / `--no-auth` | n/a | no auth |
+| `--yes`, `-y` | n/a | prompt |
 
 The scaffolder refuses to write into a directory that already has files in it.
 
@@ -93,7 +93,7 @@ curl -X POST localhost:3000/api/posts \
 ```
 
 A `JWT_SECRET` is generated into `.env` when the project is created, and
-`config/env.ts` declares it with **no default** — the app refuses to boot if it
+`config/env.ts` declares it with **no default**, so the app refuses to boot if it
 is missing rather than falling back to a shared literal. `.env` is gitignored;
 `.env.example` carries a placeholder.
 
@@ -113,7 +113,7 @@ export default function routes() {
 ```
 
 The function form matters: an ES module is evaluated once per process, so
-top-level `Route.get(...)` calls would register nothing on a second boot — in a
+top-level `Route.get(...)` calls would register nothing on a second boot: in a
 test, a benchmark, or a reload. `createApp` rejects a routes file that does not
 default-export a function.
 
@@ -141,6 +141,6 @@ controller, the method is bound, and the server stores a plain function. See
 
 ## Next
 
-- [Project structure](project-structure.md) — what each folder does and the boot order
-- [Routing](routing.md) — groups, schemas, per-route middleware
-- [Database](database.md) — migrations, seeders, relations
+- [Project structure](project-structure.md): what each folder does and the boot order
+- [Routing](routing.md): groups, schemas, per-route middleware
+- [Database](database.md): migrations, seeders, relations

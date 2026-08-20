@@ -7,7 +7,7 @@ export type Language = 'ts' | 'js'
 const PAD = (n: number) => String(n).padStart(2, '0')
 
 /**
- * `YYYYMMDDHHmmssSSS` — millisecond resolution.
+ * `YYYYMMDDHHmmssSSS`, at millisecond resolution.
  *
  * Second resolution used to collide when two `make:migration` calls landed in
  * the same second, producing two files knex would order arbitrarily.
@@ -66,7 +66,7 @@ export function assertGeneratableName(name: string): void {
     throw new Error(`[lugh] "${name}" contains no letters or digits to build a name from`)
   }
   if (!/^[A-Za-z_$]/.test(pascal)) {
-    throw new Error(`[lugh] "${name}" produces the invalid class name "${pascal}" — it must not start with a digit`)
+    throw new Error(`[lugh] "${name}" produces the invalid class name "${pascal}": it must not start with a digit`)
   }
 }
 
@@ -182,6 +182,22 @@ export const serviceTemplate = (name: string, lang: Language = 'ts'): string => 
   const id = lang === 'ts' ? `id: number` : `id`
 
   return `${imports}
+// List the columns a client is allowed to set, then delete this line. Until you
+// do, create() and update() write nothing and the database will say so.
+//
+// The allow-list is the point: passing a request body straight to insert() or
+// patch() is mass assignment, and a column added to the table later would
+// silently become writable from the outside.
+const FILLABLE${lang === 'ts' ? ': string[]' : ''} = []
+
+function pick(${input}) {
+  const out${lang === 'ts' ? ': Record<string, unknown>' : ''} = {}
+  for (const key of FILLABLE) {
+    if (input[key] !== undefined) out[key] = input[key]
+  }
+  return out
+}
+
 export default class ${cls} {
 ${ctor}
 
@@ -193,14 +209,12 @@ ${ctor}
     return ${Model}.query().findById(id)
   }
 
-  // Whitelist the columns a client may set before calling this from a
-  // controller — passing a request body straight through is mass assignment.
   create(${input}) {
-    return ${Model}.query().insert(input)
+    return ${Model}.query().insert(pick(input))
   }
 
   async update(${id}, ${input}) {
-    await ${Model}.query().patch(input).where('id', id)
+    await ${Model}.query().patch(pick(input)).where('id', id)
     return this.find(id)
   }
 

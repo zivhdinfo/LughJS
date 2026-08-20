@@ -40,7 +40,7 @@ function scaffoldTempProject(): string {
 }
 
 function runTsc(dir: string): void {
-  // Strict, NodeNext, noEmit — the same profile the framework requires.
+  // Strict, NodeNext, noEmit: the same profile the framework requires.
   const tsconfig = {
     compilerOptions: {
       target: 'ES2023',

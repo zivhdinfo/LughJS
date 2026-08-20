@@ -23,7 +23,7 @@ export class RouteBuilder {
   ) {}
 
   /**
-   * Attaches a JSON Schema. It is compiled once, while the app boots — a
+   * Attaches a JSON Schema. It is compiled once, while the app boots, so a
    * request never pays for parsing or interpreting it.
    *
    * Besides `body`/`params`/`querystring`, declare `response`. Doing so both
@@ -56,7 +56,7 @@ export class RouteBuilder {
  * `'Controller.action'` string. The string is resolved ONCE, while the app
  * boots: the container builds the controller, the action is bound to it, and
  * what the server stores is a plain function. Nothing is looked up, parsed or
- * allocated per request — the indirection exists only in your source.
+ * allocated per request: the indirection exists only in your source.
  */
 export class RouteRegistrar {
   private registrations: RouteRegistration[] = []
@@ -93,7 +93,7 @@ export class RouteRegistrar {
   /**
    * Declares every route inside the callback under a shared URL prefix.
    * Groups nest, and the previous prefix is restored afterwards even if the
-   * callback throws — a failed group cannot leak its prefix onto later routes.
+   * callback throws, so a failed group cannot leak its prefix onto later routes.
    */
   group(prefix: string, declare: (route: RouteRegistrar) => void): RouteRegistrar {
     const previous = this.prefix

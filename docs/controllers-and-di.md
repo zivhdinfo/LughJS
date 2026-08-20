@@ -3,7 +3,7 @@
 ## The shape of a controller
 
 A controller is a class with a default export. Its methods receive the request
-and the reply directly — there is no wrapper object and no `ctx`.
+and the reply directly. There is no wrapper object and no `ctx`.
 
 ```ts
 import type { LughRequest, LughReply } from '@lughjs/core'
@@ -25,7 +25,7 @@ export default class PostController {
 ```
 
 Returning a value sends it. `reply.code()` sets the status. Streaming, taking
-over the socket, setting headers — all of it works, because the objects are the
+over the socket, setting headers. All of it works, because the objects are the
 real ones and nothing has been narrowed on the way in.
 
 ## How injection resolves
@@ -41,7 +41,7 @@ constructor(private readonly postService: PostService)
                               ^^^^^^^^^^^ this name is the lookup
 ```
 
-Rename the parameter and resolution breaks — the type annotation is not what is
+Rename the parameter and resolution breaks: the type annotation is not what is
 matched. This is the one place where a name is load-bearing.
 
 Three keys are always available:
@@ -68,7 +68,7 @@ a boot error, as is two files mapping to the same key.
 
 Services and controllers are registered with `.singleton()` and resolved while
 the app boots. By the time a request arrives, the route handler is a bound
-method on an object that already exists — there is no container lookup, no
+method on an object that already exists. There is no container lookup, no
 proxy, and no per-request allocation from the DI layer.
 
 The practical consequence: **a service instance is shared across all requests.**
@@ -113,7 +113,7 @@ create(authorId: number, input: PostInput) {
 }
 ```
 
-Note that `authorId` comes from the verified token, not from the body — so a
+Note that `authorId` comes from the verified token, not from the body, so a
 client cannot attribute a row to somebody else. The generated service templates
 carry a comment saying exactly this.
 
@@ -127,5 +127,5 @@ lugh make:model Post
 
 The generators emit TypeScript or JavaScript depending on the project, which is
 detected by whether `config/app.ts` or `config/app.js` exists. A name that
-cannot form a valid class — `2fa`, `---` — is rejected rather than written out
+cannot form a valid class, such as `2fa` or `---`, is rejected rather than written out
 as a file that will not parse.

@@ -1,16 +1,21 @@
 #!/usr/bin/env node
-// LughJS CLI shim: registers the tsx loader, then runs the TypeScript CLI.
+// Lugh CLI entry point.
+//
+// The tsx loader is registered first because the CLI imports files from the
+// user's project (config/database.ts, config/app.ts, the route table) and those
+// are TypeScript in a TypeScript project. The framework's own code is compiled,
+// so the loader only ever pays for project files.
 import { register } from 'tsx/esm/api'
-import { createRequire } from 'node:module'
-import { pathToFileURL } from 'node:url'
 
 register()
 
-const require = createRequire(import.meta.url)
-const cliPath = pathToFileURL(require.resolve('../src/cli.ts')).href
+// Imported by package name rather than by relative path, so the CLI resolves
+// through the same `exports` map the project does. Both then load one copy of
+// the framework: `Route` is a module-global registrar, and two copies of it
+// would collect two different route tables.
+const { main } = await import('@lughjs/core/cli')
 
 try {
-  const { main } = await import(cliPath)
   await main(process.argv.slice(2))
 } catch (err) {
   // Commander throws on --help/--version; those are not failures.

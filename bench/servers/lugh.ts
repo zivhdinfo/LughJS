@@ -1,7 +1,7 @@
 /**
  * The application under measurement, started as its own process.
  *
- * It is booted exactly the way a real project is — `createApp` reads the
+ * It is booted exactly the way a real project is: `createApp` reads the
  * config, opens the pool, builds the container, wires the controllers and
  * installs the routes. Nothing is stubbed and no shortcut path exists, so what
  * the runner measures is the framework as shipped.

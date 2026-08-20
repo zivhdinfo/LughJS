@@ -1,6 +1,7 @@
 import { Command } from 'commander'
 import { spawn } from 'node:child_process'
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import {
@@ -34,7 +35,10 @@ import {
 } from './database.js'
 import type { Knex } from 'knex'
 
-const VERSION = '2.0.0'
+// Read from package.json rather than duplicating the number: `src/cli.ts` and
+// `dist/cli.js` are both one directory below the manifest, so one path works
+// for the compiled build and for a source run.
+const VERSION = (createRequire(import.meta.url)('../package.json') as { version: string }).version
 
 // ─────────────────────────────────────────────────────────────────────────────
 // project helpers
@@ -96,7 +100,7 @@ export function resolveSeederName(name: string, dir: string): string {
   const partial = files.filter((f) => f.includes(name))
   if (partial.length === 1) return partial[0] as string
   if (partial.length > 1) {
-    throw new Error(`[lugh] Seeder "${name}" is ambiguous — it matches: ${partial.join(', ')}`)
+    throw new Error(`[lugh] Seeder "${name}" is ambiguous, it matches: ${partial.join(', ')}`)
   }
   throw new Error(`[lugh] Seeder "${name}" not found in ${dir}. Available: ${files.join(', ') || '(none)'}`)
 }
@@ -165,7 +169,7 @@ export async function main(argv: string[]): Promise<void> {
   const root = process.cwd()
   const program = new Command()
     .name('lugh')
-    .description('Lugh — structure, a container and a database layer for Node HTTP services')
+    .description('Structure, a container and a database layer for Node HTTP services')
     .version(VERSION)
     .showHelpAfterError()
 

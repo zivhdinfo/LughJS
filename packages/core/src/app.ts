@@ -13,7 +13,7 @@ import type { Knex } from 'knex'
 export interface AppConfig {
   name?: string
   /**
-   * Request logging. Defaults to `true`, which writes a line per request —
+   * Request logging. Defaults to `true`, which writes a line per request:
    * the right default while developing, and a real cost under load. Pass
    * `false`, or a level object, when that matters.
    */
@@ -37,7 +37,7 @@ const PROJECT_EXTENSIONS = ['.ts', '.js', '.mjs']
 
 /**
  * Resolves `<root>/<...segments>` to a real file, trying each extension, so a
- * JavaScript project — which has no `.ts` anywhere — boots the same way.
+ * JavaScript project, which has no `.ts` anywhere, boots the same way.
  */
 function resolveProjectFile(root: string, ...segments: string[]): string {
   const base = path.join(root, ...segments)
@@ -61,16 +61,16 @@ async function importDefault<T>(file: string): Promise<T> {
 /**
  * Boots share one process-global route registrar, so two overlapping calls
  * would interleave their route tables. Boots are therefore queued; sequential
- * boots — tests, benchmarks, a reload — are unaffected.
+ * boots (tests, benchmarks, a reload) are unaffected.
  */
 let bootQueue: Promise<unknown> = Promise.resolve()
 
 /**
  * Boots an application from a project root.
  *
- * The order below is the whole framework. Everything expensive — reading
+ * The order below is the whole framework. Everything expensive (reading
  * config, opening the pool, constructing services, compiling schemas, binding
- * controller methods — happens exactly once, here. What is left for a request
+ * controller methods) happens exactly once, here. What is left for a request
  * to do is run your handler.
  *
  *  1. load and validate the environment
@@ -115,7 +115,7 @@ async function bootApp(root: string): Promise<LughApp> {
   const declareRoutes = routesModule.default
   // The route table must be declared inside a function. A module body is
   // evaluated once per process, so routes written at the top level would
-  // register on the first boot and silently vanish on the second — in a test,
+  // register on the first boot and silently vanish on the second: in a test,
   // a benchmark, or after a reload.
   if (typeof declareRoutes !== 'function') {
     throw new Error(
@@ -157,7 +157,7 @@ function isHttpError(err: unknown): err is HttpErrorLike {
  *  - anything else → 500, and a GENERIC message
  *
  * The 500 rule is not caution for its own sake. Database drivers put the failing
- * statement — *including the values bound into it* — in `err.message`. Passing
+ * statement, *including the values bound into it*, in `err.message`. Passing
  * that through would answer an anonymous request with your table names, your
  * column names, your constraints and a row of real data. So `message` is
  * `Internal Server Error` in every environment, and the detail is attached
@@ -202,7 +202,7 @@ export function installErrorHandler(server: LughServer, env: Record<string, unkn
 
 /**
  * Runs every module in `app/middleware` that default-exports a function, in
- * sorted file-name order — which is why the generated files carry `005_`,
+ * sorted file-name order, which is why the generated files carry `005_`,
  * `010_`, `020_` prefixes: the number IS the ordering mechanism.
  *
  * A module with NO default export is skipped, deliberately. That is the

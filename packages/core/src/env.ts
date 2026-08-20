@@ -16,7 +16,7 @@ const BASE_SPECS: EnvSpecs = {
 /**
  * Loads `.env` from the project root, then validates and cleans `process.env`
  * against the app-provided envalid specs. Throws at boot when a required
- * variable is missing or malformed — a throw, not `process.exit`, so callers
+ * variable is missing or malformed. It throws rather than calling `process.exit`, so callers
  * can catch and report it.
  *
  * The result is a plain object rather than envalid's strict proxy: the proxy
